@@ -60,6 +60,8 @@ test('finger taps select, cancel, explain an illegal move and complete the whole
 
 test('focus and rotation preserve the board, turn, selected piece and undo history', async ({ page }, info) => {
   await page.goto('/#/practice');
+  const cell = await page.locator('.app-view:not([hidden])').getByTestId('square-0-9').boundingBox();
+  expect(cell!.width).toBeGreaterThanOrEqual(48);
   await page.getByRole('button', { name: '双人同屏' }).tap();
   await page.getByRole('button', { name: '专心下棋' }).tap();
   await expect(page.getByRole('button', { name: '退出专注' })).toBeInViewport();

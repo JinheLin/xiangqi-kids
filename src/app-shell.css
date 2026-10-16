@@ -61,6 +61,7 @@
   .practice-page > .page-title h1 { font-size: 22px; }
   .practice-page > .page-title .eyebrow, .practice-page > .page-title p { display: none; }
   .practice-heading-actions { gap: 10px; }
+  .mode-switch { padding: 3px; }
   .mode-switch button { min-height: 40px; padding: 6px 12px; }
   .focus-button { min-height: 48px; padding: 8px 12px; }
   .play-layout { display: grid; flex: 1; min-height: 0; grid-template-columns: minmax(0, 1.45fr) minmax(306px, 1fr); gap: 16px; align-items: stretch; }
