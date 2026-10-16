@@ -6,6 +6,7 @@ import { chapters, lessons } from '../data/curriculum';
 import { BoardSelection, ChessBoard } from './Board';
 import { HorseArt, Icon, Stars } from './Art';
 import { PlayFocusButton, usePlayFocus } from './PlayFocus';
+import { useSound } from './Sound';
 
 export function speak(text: string, enabled: boolean) {
   if (!enabled || !('speechSynthesis' in window)) return;
@@ -31,6 +32,7 @@ export function LessonPlayer({ lesson, voice, onComplete, navigate }: { lesson: 
   const [demo, setDemo] = useState(false);
   const [wrongOption, setWrongOption] = useState<number | null>(null);
   const { focused, setFocused } = usePlayFocus();
+  const { play } = useSound();
   const stars = mistakes === 0 && totalHints === 0 ? 3 : mistakes <= 3 ? 2 : 1;
   const nextLesson = lessons[lessons.findIndex(l => l.id === lesson.id) + 1];
 
@@ -40,13 +42,13 @@ export function LessonPlayer({ lesson, voice, onComplete, navigate }: { lesson: 
   }, [step, voice]);
   useEffect(() => {
     if (!demo || step.kind !== 'move') return;
-    const start = window.setTimeout(() => setBoard(applyMove(step.board, step)), 650);
+    const start = window.setTimeout(() => { setBoard(applyMove(step.board, step)); play(at(step.board, step.to) ? 'capture' : 'move'); }, 650);
     const finish = window.setTimeout(() => { setBoard(step.board); setSelected(null); setDemo(false); }, 1900);
     return () => { clearTimeout(start); clearTimeout(finish); };
-  }, [demo, step]);
+  }, [demo, step, play]);
 
-  function success() { setSolved(true); setSelected(null); setFeedback({ kind: 'success', text: step.explain }); speak(`真棒！${step.explain}`, voice); }
-  function wrong(text: string) { setMistakes(n => n + 1); setFeedback({ kind: 'error', text }); speak(text, voice); }
+  function success() { play('correct', step.kind === 'move' ? .12 : 0); setSolved(true); setSelected(null); setFeedback({ kind: 'success', text: step.explain }); speak(`真棒！${step.explain}`, voice); }
+  function wrong(text: string) { play('mistake'); setMistakes(n => n + 1); setFeedback({ kind: 'error', text }); speak(text, voice); }
   function onSquare(p: Point) {
     if (solved || demo) return;
     const piece = at(board, p);
@@ -59,19 +61,19 @@ export function LessonPlayer({ lesson, voice, onComplete, navigate }: { lesson: 
     }
     if (!selected) {
       if (!piece || piece.side !== step.turn) { setFeedback({ kind: 'info', text: '先选择自己的红色棋子，再选择它要去的地方。' }); return; }
-      setSelected(p); setFeedback(null); return;
+      play('select'); setSelected(p); setFeedback(null); return;
     }
     if (samePoint(p, selected)) { setSelected(null); return; }
-    if (piece?.side === step.turn) { setSelected(p); setFeedback({ kind: 'info', text: '换好棋子啦。现在点一下它要去的落点。' }); return; }
+    if (piece?.side === step.turn) { play('select'); setSelected(p); setFeedback({ kind: 'info', text: '换好棋子啦。现在点一下它要去的落点。' }); return; }
     const move = { from: selected, to: p }, valid = validateMove(board, move, step.turn);
     if (!valid.ok) { wrong(valid.reason); return; }
     if (!samePoint(selected, step.from) || !samePoint(p, step.to)) {
       wrong(`这步符合走法！这次的小任务是：${step.instruction}`); return;
     }
-    setBoard(applyMove(board, move)); success();
+    play(piece ? 'capture' : 'move'); setBoard(applyMove(board, move)); success();
   }
   function next() {
-    if (stepIndex === lesson.steps.length - 1) { onComplete(lesson.id, stars); setFocused(false); setFinished(true); return; }
+    if (stepIndex === lesson.steps.length - 1) { play('win'); onComplete(lesson.id, stars); setFocused(false); setFinished(true); return; }
     const next = lesson.steps[stepIndex + 1];
     setStepIndex(n => n + 1); setBoard(next.board); setSelected(null); setSolved(false); setFeedback(null); setHints(0); setWrongOption(null);
   }
@@ -101,7 +103,7 @@ export function LessonPlayer({ lesson, voice, onComplete, navigate }: { lesson: 
           {step.kind === 'quiz' && <div className="quiz-options">{step.options.map((option, i) => <button key={option} className={`quiz-option ${solved && i === step.answer ? 'correct' : wrongOption === i ? 'incorrect' : ''}`} disabled={solved} onClick={() => { if (i === step.answer) success(); else { setWrongOption(i); wrong('再想一想，答案就在小提示里。试试另一个答案吧！'); } }}><span>{String.fromCharCode(65 + i)}</span>{option}{solved && i === step.answer && <Icon name="check" size={18} />}</button>)}</div>}
           <div className={`feedback ${feedback?.kind || 'quiet'}`} role="status" aria-live="polite">{feedback ? <><Icon name={feedback.kind === 'success' ? 'check' : 'hint'} size={21} /><p>{feedback.text}</p></> : <><Icon name="hint" size={19} /><p>不用担心走错，每一次尝试都会有新发现。</p></>}</div>
           {hints > 0 && !solved && <div className="hint-box" role="status"><strong>小提示 {Math.min(hints, step.hints.length)}</strong><p>{step.hints[Math.min(hints, step.hints.length) - 1]}</p></div>}
-          {solved ? <button className="btn primary full" onClick={next}>{stepIndex === lesson.steps.length - 1 ? '完成课程，领取星星' : '下一个小任务'}<Icon name="arrow" /></button> : <div className="help-actions"><button className="btn secondary" disabled={demo || hints >= step.hints.length} onClick={() => { setHints(n => n + 1); setTotalHints(n => n + 1); }}><Icon name="hint" size={18} />{hints >= step.hints.length ? '提示都在这里啦' : '给我一点提示'}</button>{step.kind === 'move' && <button className="text-btn" disabled={demo} onClick={() => { setBoard(step.board); setSelected(step.from); setDemo(true); setTotalHints(n => n + 1); setFeedback({ kind: 'info', text: '看好啦！先选棋子，再走到星星处。演示后你来试一次。' }); }}><Icon name="play" size={17} />{demo ? '演示中…' : '看演示'}</button>}</div>}
+          {solved ? <button className="btn primary full" onClick={next}>{stepIndex === lesson.steps.length - 1 ? '完成课程，领取星星' : '下一个小任务'}<Icon name="arrow" /></button> : <div className="help-actions"><button className="btn secondary" disabled={demo || hints >= step.hints.length} onClick={() => { play('hint'); setHints(n => n + 1); setTotalHints(n => n + 1); }}><Icon name="hint" size={18} />{hints >= step.hints.length ? '提示都在这里啦' : '给我一点提示'}</button>{step.kind === 'move' && <button className="text-btn" disabled={demo} onClick={() => { play('hint'); setBoard(step.board); setSelected(step.from); setDemo(true); setTotalHints(n => n + 1); setFeedback({ kind: 'info', text: '看好啦！先选棋子，再走到星星处。演示后你来试一次。' }); }}><Icon name="play" size={17} />{demo ? '演示中…' : '看演示'}</button>}</div>}
         </section>
         <div className="gentle-note"><Icon name="star" /><p>多想一会儿也没关系。<br /><strong>会思考的小脑袋，正在悄悄长大。</strong></p></div>
       </aside>

@@ -1,9 +1,10 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { applyMove, at, choosePracticeMove, getOutcome, initialBoard, isInCheck, legalMoves, opposite, pieceLabel, pieceName, positionKey, samePoint, sideLabel, validateMove } from '../engine/xiangqi';
 import type { Board, Move, Piece, Point, Side } from '../engine/xiangqi';
 import { BoardSelection, ChessBoard } from './Board';
 import { HorseArt, Icon } from './Art';
 import { PlayFocusButton, usePlayFocus } from './PlayFocus';
+import { useSound } from './Sound';
 
 interface Frame { board: Board; turn: Side; lastMove: Move | null; captured?: Piece; text: string }
 const newGame = (): Frame[] => [{ board: initialBoard(), turn: 'red', lastMove: null, text: '新的一局，红方先走。' }];
@@ -23,36 +24,45 @@ export function Practice() {
   const [feedback, setFeedback] = useState('点一下红色棋子，就能看见它可以去的地方。');
   const [confirmReset, setConfirmReset] = useState(false);
   const { focused, setFocused } = usePlayFocus();
+  const { play } = useSound();
   const current = frames[frames.length - 1], { board, turn } = current;
   const outcome = useMemo(() => getOutcome(board, turn), [board, turn]);
   const repeated = frames.filter(frame => positionKey(frame.board, frame.turn) === positionKey(board, turn)).length >= 3;
   const finished = !!outcome.winner || repeated;
   const thinking = mode === 'ai' && turn === 'black' && !finished;
   const legal = selected && aids ? legalMoves(board, turn, selected).map(m => m.to) : [];
+  const playMove = useCallback((position: Board, move: Move, side: Side) => {
+    play(at(position, move.to) ? 'capture' : 'move');
+    const next = getOutcome(applyMove(position, move), opposite(side));
+    if (next.winner) play('win', .12);
+    else if (next.kind === 'check') play('check', .12);
+  }, [play]);
 
   useEffect(() => {
     if (!thinking) return;
     const timer = window.setTimeout(() => {
       const move = choosePracticeMove(board, 'black');
-      if (move) { setFrames(old => advance(old, move)); setFeedback('小棋搭子走好啦，轮到你了。先看看自己的帅是否安全。'); }
+      if (move) { playMove(board, move, 'black'); setFrames(old => advance(old, move)); setFeedback('小棋搭子走好啦，轮到你了。先看看自己的帅是否安全。'); }
     }, 480);
     return () => clearTimeout(timer);
-  }, [board, thinking]);
+  }, [board, thinking, playMove]);
 
   function onSquare(p: Point) {
     if (finished || thinking) return;
     const piece = at(board, p);
     if (!selected || piece?.side === turn) {
-      if (piece?.side !== turn) { setFeedback(`现在轮到${sideLabel(turn)}，先选一枚自己的棋子吧。`); return; }
+      if (piece?.side !== turn) { play('mistake'); setFeedback(`现在轮到${sideLabel(turn)}，先选一枚自己的棋子吧。`); return; }
       if (selected && samePoint(selected, p)) { setSelected(null); return; }
-      setSelected(p); setHintTarget(undefined); setFeedback(`选中了${pieceName(piece)}。${aids ? '小圆点是安全的空落点，圆圈是可以吃的棋子。' : '再点一下你想去的位置。'}`); return;
+      play('select'); setSelected(p); setHintTarget(undefined); setFeedback(`选中了${pieceName(piece)}。${aids ? '小圆点是安全的空落点，圆圈是可以吃的棋子。' : '再点一下你想去的位置。'}`); return;
     }
     const move = { from: selected, to: p }, validation = validateMove(board, move, turn);
-    if (!validation.ok) { setFeedback(validation.reason); return; }
+    if (!validation.ok) { play('mistake'); setFeedback(validation.reason); return; }
+    playMove(board, move, turn);
     setFrames(old => advance(old, move)); setSelected(null); setHintTarget(undefined);
     setFeedback(isInCheck(applyMove(board, move), opposite(turn)) ? '将军！下一方必须先解除队长的危险。' : validation.reason);
   }
   function undo() {
+    play('undo');
     // If the companion has replied, rewind both moves to the child's previous turn.
     const count = mode === 'ai' && turn === 'red' ? 2 : 1;
     setFrames(old => old.slice(0, Math.max(1, old.length - count)));
@@ -68,7 +78,7 @@ export function Practice() {
       <section className="coach-card practice-coach"><div className="coach-top"><span className="coach-avatar"><HorseArt small /></span><div><strong>{mode === 'ai' ? '你的小棋搭子' : '一起下，更开心'}</strong><span>{mode === 'ai' ? '你执红棋，我来执黑棋' : '两位棋手轮流走棋'}</span></div></div>
         {finished ? <div className="game-result" role="status"><Icon name="trophy" size={32} /><h2>{outcome.winner ? `${sideLabel(outcome.winner)}获胜！` : '休息一下，换个思路'}</h2><p>{outcome.kind === 'checkmate' ? '将死：队长正被攻击，而且没有办法解除危险。' : outcome.kind === 'stalemate' ? '困毙：虽然没有被将军，但轮到的一方已经无棋可走，也会输。' : '同一个局面已出现三次，本次教学练习暂停。可以悔棋换个走法，或重新开局。'}</p></div> : <div className="practice-message" role="status" aria-live="polite"><h2>{thinking ? '让我想一想…' : '轮到你的小脑袋啦'}</h2><p>{feedback}</p></div>}
         <label className="toggle-line"><span>显示合法走法</span><input type="checkbox" checked={aids} onChange={e => setAids(e.target.checked)} /><span className="toggle-visual" aria-hidden="true" /></label>
-        <div className="practice-tools"><button className="btn secondary" onClick={undo} disabled={frames.length < 2}><Icon name="undo" size={18} />悔棋</button><button className="btn secondary" disabled={finished || thinking} onClick={() => { const hint = choosePracticeMove(board, turn); if (hint) { setSelected(hint.from); setHintTarget(hint.to); setFeedback('可以试试这一步：把选中的棋子移到星星处。先观察，再决定。'); } }}><Icon name="hint" size={18} />想想怎么走</button></div>
+        <div className="practice-tools"><button className="btn secondary" onClick={undo} disabled={frames.length < 2}><Icon name="undo" size={18} />悔棋</button><button className="btn secondary" disabled={finished || thinking} onClick={() => { play('hint'); const hint = choosePracticeMove(board, turn); if (hint) { setSelected(hint.from); setHintTarget(hint.to); setFeedback('可以试试这一步：把选中的棋子移到星星处。先观察，再决定。'); } }}><Icon name="hint" size={18} />想想怎么走</button></div>
         {confirmReset ? <div className="reset-confirm"><p>要结束这一局，重新开始吗？</p><div className="button-row"><button className="btn primary" onClick={() => { setFrames(newGame()); setSelected(null); setHintTarget(undefined); setConfirmReset(false); setFeedback('新的一局开始啦，红方先走！'); }}>重新开局</button><button className="text-btn" onClick={() => setConfirmReset(false)}>接着下</button></div></div> : <button className="text-btn reset-game" onClick={() => { if (frames.length > 1) setConfirmReset(true); else { setFrames(newGame()); setFeedback('棋盘准备好啦，红方先走！'); } }}><Icon name="reset" size={17} />重新开始</button>}
       </section>
       <section className="move-log"><h3>这盘棋的小足迹 <span>{frames.length - 1} 步</span></h3><div className="move-log-list">{frames.length === 1 ? <p className="muted">第一步，从这里出发。</p> : frames.slice(1).map((frame, i) => <p key={i}><span>{i + 1}</span>{frame.text}</p>)}</div></section>

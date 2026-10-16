@@ -1,8 +1,8 @@
 import { lessons } from './data/curriculum';
 
 export const STORAGE_KEY = 'xiangqi-kids-progress-v1';
-export interface Progress { version: 1; completed: Record<string, number>; lastLesson: string; voice: boolean }
-export const emptyProgress = (): Progress => ({ version: 1, completed: {}, lastLesson: lessons[0].id, voice: false });
+export interface Progress { version: 1; completed: Record<string, number>; lastLesson: string; voice: boolean; sound: boolean }
+export const emptyProgress = (): Progress => ({ version: 1, completed: {}, lastLesson: lessons[0].id, voice: false, sound: true });
 export function parseProgress(raw: string | null): Progress {
   if (!raw) return emptyProgress();
   try {
@@ -13,7 +13,7 @@ export function parseProgress(raw: string | null): Progress {
       const stars = value.completed[lesson.id];
       if (Number.isInteger(stars) && stars >= 1 && stars <= 3) completed[lesson.id] = stars;
     }
-    return { version: 1, completed, lastLesson: lessons.some(l => l.id === value.lastLesson) ? value.lastLesson : lessons[0].id, voice: value.voice === true };
+    return { version: 1, completed, lastLesson: lessons.some(l => l.id === value.lastLesson) ? value.lastLesson : lessons[0].id, voice: value.voice === true, sound: value.sound !== false };
   } catch { return emptyProgress(); }
 }
 export function awardLesson(progress: Progress, id: string, stars: number): Progress {

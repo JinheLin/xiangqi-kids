@@ -2,6 +2,8 @@ import type { CSSProperties } from 'react';
 
 export function Icon({ name, size = 20, className = '' }: { name: string; size?: number; className?: string }) {
   const paths: Record<string, React.ReactNode> = {
+    music: <><path d="M9 18V5l11-2v13M9 8l11-2" /><ellipse cx="6" cy="18" rx="3" ry="2" /><ellipse cx="17" cy="16" rx="3" ry="2" /></>,
+    'music-off': <><path d="M9 18V9m3-4 8-2v13M9 8l7-1" /><ellipse cx="6" cy="18" rx="3" ry="2" /><path d="m3 3 18 18m-5-7c-3 0-3 4 1 4" /></>,
     expand: <path d="M8 3H3v5m13-5h5v5M3 16v5h5m13-5v5h-5" />,
     minimize: <path d="M3 8h5V3m8 0v5h5M8 21v-5H3m18 0h-5v5" />,
     arrow: <><path d="M5 12h14M13 6l6 6-6 6" /></>,

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Icon } from './Art';
+import { SoundToggle } from './Sound';
 
 /** Expands the play area without requiring fullscreen permissions or locking rotation. */
 export function usePlayFocus() {
@@ -14,7 +15,7 @@ export function usePlayFocus() {
 }
 
 export function PlayFocusButton({ focused, onToggle }: { focused: boolean; onToggle: () => void }) {
-  return <button className="btn secondary focus-button" aria-pressed={focused} onClick={onToggle}>
+  return <div className="play-controls"><SoundToggle /><button className="btn secondary focus-button" aria-pressed={focused} onClick={onToggle}>
     <Icon name={focused ? 'minimize' : 'expand'} size={18} />{focused ? '退出专注' : '专心下棋'}
-  </button>;
+  </button></div>;
 }

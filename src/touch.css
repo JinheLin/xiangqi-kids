@@ -6,6 +6,12 @@ button, a, input { touch-action: manipulation; }
 .square .piece, .square .target-star, .square .legal-dot { pointer-events: none; }
 .lesson-heading-actions, .practice-heading-actions { display: flex; align-items: center; gap: 14px; }
 .focus-button { min-height: 48px; font-size: 14px; padding: 10px 16px; }
+.play-controls { display: flex; align-items: center; gap: 10px; }
+.sound-toggle { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 40px; padding: 8px 10px; border: 1px solid #dfe5d3; border-radius: 10px; background: #f8faf0; color: #87957c; font-size: 12px; white-space: nowrap; }
+.sound-toggle.on { background: #eaf0df; color: #537446; border-color: #d7e2c8; }
+.sound-toggle small { font-size: 10px; opacity: .8; }
+.play-controls .sound-toggle { display: none; }
+.board-focused .play-controls .sound-toggle { display: inline-flex; min-height: 48px; }
 .board-selection { display: flex; align-items: center; justify-content: space-between; gap: 10px; min-height: 56px; margin-top: 6px; padding: 4px 8px; border-radius: 9px; color: #738365; background: #f5f5e9; }
 .board-selection p { margin: 0; font-size: 12px; line-height: 1.7; }
 .board-selection p strong { display: block; color: #385f41; font-size: 14px; }
@@ -17,6 +23,7 @@ button, a, input { touch-action: manipulation; }
 @media (any-pointer: coarse) {
   .btn, .text-btn, .header-inner nav button, .mode-switch button, .quiz-option { min-height: 48px; }
   .voice-toggle { width: 48px; height: 48px; }
+  .sound-toggle { min-height: 48px; font-size: 13px; }
   .brand { min-height: 48px; }
   .header-inner nav button { font-size: 14px; }
   .header-inner nav svg { width: 19px; height: 19px; }
@@ -144,7 +151,20 @@ button, a, input { touch-action: manipulation; }
   .lesson-heading-actions .lesson-token { display: none; }
   .focus-button { padding: 10px 12px; font-size: 13px; }
 }
+@media (min-width: 900px) and (max-width: 1100px) {
+  .header-inner { gap: 12px; }
+  .header-inner nav button { padding: 10px 8px; font-size: 13px; }
+  .header-tools { gap: 8px; }
+}
 @media (max-width: 650px) {
+  .header-tools { gap: 6px; }
+  .header-tools .star-counter { min-width: 40px; padding: 6px 8px; }
+  .header-tools .sound-toggle { padding: 7px; gap: 4px; font-size: 11px; }
+  .header-tools .sound-toggle small { display: none; }
+  .header-tools .sound-toggle svg { width: 17px; }
+  .lesson-heading > div:first-child { min-width: 0; }
+  .board-focused .lesson-heading { align-items: flex-start; }
+  .board-focused .lesson-heading h1 { font-size: 19px; }
   .header-inner nav button { font-size: 12px; padding: 10px 5px; gap: 5px; }
   .header-inner nav svg { width: 16px; height: 16px; }
   .practice-heading-actions { width: 100%; gap: 10px; flex-wrap: wrap; }

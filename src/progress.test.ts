@@ -21,4 +21,11 @@ describe('durable progress', () => {
     const next = awardLesson(progress, lessons[0].id, 2);
     expect(isUnlocked(1, next)).toBe(true); expect(isUnlocked(2, next)).toBe(false); expect(firstUnfinished(next)).toBe(lessons[1]);
   });
+  it('migrates existing progress without losing stars and saves sound independently of speech', () => {
+    const old = JSON.stringify({ version: 1, completed: { 'hello-board': 3 }, voice: true });
+    const progress = parseProgress(old);
+    expect(progress.completed).toEqual({ 'hello-board': 3 }); expect(progress.sound).toBe(true); expect(progress.voice).toBe(true);
+    const muted = parseProgress(JSON.stringify({ ...progress, sound: false }));
+    expect(muted.sound).toBe(false); expect(muted.voice).toBe(true); expect(starTotal(muted)).toBe(3);
+  });
 });
