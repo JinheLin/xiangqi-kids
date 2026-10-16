@@ -65,14 +65,14 @@ test('selection, moves, captures and undo all generate audio in free practice', 
   await press(page.getByRole('button', { name: '双人同屏' }), isMobile);
   for (const [from, to, step] of [['0-6', '0-5', 1], ['0-3', '0-4', 2], ['0-5', '0-4', 3]] as const) {
     const before = (await probe(page)).starts;
-    await press(page.getByTestId(`square-${from}`), isMobile);
+    await press(page.locator('.app-view:not([hidden])').getByTestId(`square-${from}`), isMobile);
     await expect.poll(async () => (await probe(page)).starts).toBeGreaterThan(before);
     const selected = (await probe(page)).starts;
-    await press(page.getByTestId(`square-${to}`), isMobile);
+    await press(page.locator('.app-view:not([hidden])').getByTestId(`square-${to}`), isMobile);
     await expect(page.getByText(`已走 ${step} 步`, { exact: true })).toBeVisible();
     await expect.poll(async () => (await probe(page)).starts).toBeGreaterThan(selected);
   }
-  await expect(page.getByTestId('square-0-4')).toHaveAttribute('aria-label', /红方兵/);
+  await expect(page.locator('.app-view:not([hidden])').getByTestId('square-0-4')).toHaveAttribute('aria-label', /红方兵/);
   const before = (await probe(page)).starts;
   await press(page.getByRole('button', { name: '悔棋', exact: true }), isMobile);
   await expect.poll(async () => (await probe(page)).starts).toBeGreaterThan(before);
@@ -83,7 +83,7 @@ test('the sound switch remains available in focus mode and survives refresh inde
   await observeNativeAudio(page); await page.goto('/#/practice');
   await press(page.getByRole('button', { name: '专心下棋', exact: true }), isMobile);
   await press(page.getByRole('button', { name: '关闭音效', exact: true }), isMobile);
-  await press(page.getByTestId('square-0-6'), isMobile); await press(page.getByTestId('square-0-5'), isMobile);
+  await press(page.locator('.app-view:not([hidden])').getByTestId('square-0-6'), isMobile); await press(page.locator('.app-view:not([hidden])').getByTestId('square-0-5'), isMobile);
   await expect(page.getByText('已走 2 步', { exact: true })).toBeVisible();
   expect((await probe(page)).contexts).toBe(0);
   await press(page.getByRole('button', { name: '开启音效', exact: true }), isMobile);

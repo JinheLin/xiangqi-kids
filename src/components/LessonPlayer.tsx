@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { applyMove, at, legalMoves, pieceName, samePoint, validateMove } from '../engine/xiangqi';
 import type { Point } from '../engine/xiangqi';
 import type { Lesson } from '../data/curriculum';
@@ -18,7 +18,7 @@ export function speak(text: string, enabled: boolean) {
   window.speechSynthesis.speak(utterance);
 }
 
-export function LessonPlayer({ lesson, voice, onComplete, navigate }: { lesson: Lesson; voice: boolean; onComplete: (id: string, stars: number) => void; navigate: (route: string) => void }) {
+export function LessonPlayer({ lesson, voice, onComplete, navigate, active = true }: { active?: boolean; lesson: Lesson; voice: boolean; onComplete: (id: string, stars: number) => void; navigate: (route: string) => void }) {
   const [stepIndex, setStepIndex] = useState(0);
   const step = lesson.steps[stepIndex];
   const [board, setBoard] = useState(step.board);
@@ -31,21 +31,41 @@ export function LessonPlayer({ lesson, voice, onComplete, navigate }: { lesson: 
   const [finished, setFinished] = useState(false);
   const [demo, setDemo] = useState(false);
   const [wrongOption, setWrongOption] = useState<number | null>(null);
-  const { focused, setFocused } = usePlayFocus();
+  const { focused, setFocused } = usePlayFocus(active);
   const { play } = useSound();
   const stars = mistakes === 0 && totalHints === 0 ? 3 : mistakes <= 3 ? 2 : 1;
   const nextLesson = lessons[lessons.findIndex(l => l.id === lesson.id) + 1];
 
   useEffect(() => {
+    if (!active) return;
     speak(`${step.title}。${step.instruction}`, voice);
     return () => { if ('speechSynthesis' in window) window.speechSynthesis.cancel(); };
-  }, [step, voice]);
+  }, [step, voice, active]);
   useEffect(() => {
-    if (!demo || step.kind !== 'move') return;
+    if (!active || !demo || step.kind !== 'move') return;
     const start = window.setTimeout(() => { setBoard(applyMove(step.board, step)); play(at(step.board, step.to) ? 'capture' : 'move'); }, 650);
     const finish = window.setTimeout(() => { setBoard(step.board); setSelected(null); setDemo(false); }, 1900);
     return () => { clearTimeout(start); clearTimeout(finish); };
-  }, [demo, step, play]);
+  }, [demo, step, play, active]);
+  useEffect(() => { if (!active && demo) { setDemo(false); setBoard(step.board); setSelected(null); } }, [active, demo, step]);
+  const page = useRef<HTMLElement>(null);
+  const lastShownStep = useRef<typeof step | null>(null);
+  useEffect(() => {
+    if (!active || lastShownStep.current === step) return;
+    // Wait until the enclosing screen has restored its own scroll position.
+    const frame = requestAnimationFrame(() => {
+      lastShownStep.current = step;
+      if (matchMedia('(max-width: 900px)').matches || matchMedia('(orientation: portrait) and (any-pointer: coarse)').matches) {
+        page.current?.querySelector(step.kind === 'quiz' ? '.coach-card' : '.board-card')?.scrollIntoView({ block: 'start' });
+      }
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [active, step]);
+  useEffect(() => {
+    if (active && feedback && (matchMedia('(max-width: 650px)').matches)) {
+      page.current?.querySelector('.feedback')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  }, [active, feedback]);
 
   function success() { play('correct', step.kind === 'move' ? .12 : 0); setSolved(true); setSelected(null); setFeedback({ kind: 'success', text: step.explain }); speak(`真棒！${step.explain}`, voice); }
   function wrong(text: string) { play('mistake'); setMistakes(n => n + 1); setFeedback({ kind: 'error', text }); speak(text, voice); }
@@ -87,7 +107,8 @@ export function LessonPlayer({ lesson, voice, onComplete, navigate }: { lesson: 
     <div className="button-row"><button className="btn primary" onClick={() => navigate(nextLesson ? `/lesson/${nextLesson.id}` : '/practice')}>{nextLesson ? '学习下一课' : '去自由练习'}<Icon name="arrow" /></button><button className="btn secondary" onClick={() => navigate('/learn')}>回到学习地图</button></div>
   </main>;
 
-  return <main className="lesson-page page-width">
+  return <main ref={page} className="lesson-page page-width">
+    <div className="screen-jump" role="group" aria-label="课堂区域"><button onClick={() => page.current?.querySelector('.board-card')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}><Icon name="grid" size={17} />看棋盘</button><span>小任务 {stepIndex + 1} / {lesson.steps.length}</span><button onClick={() => page.current?.querySelector('.coach-card')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}><Icon name="hint" size={17} />讲解与提示</button></div>
     <div className="lesson-top"><button className="text-btn" onClick={() => navigate('/learn')}><Icon name="back" />学习地图</button><span>第 {lesson.chapter + 1} 章 · {chapters[lesson.chapter].title}</span><span className="step-label">{stepIndex + 1} / {lesson.steps.length} 个小任务</span></div>
     <div className="step-progress" aria-label={`课程进度 ${stepIndex + 1}/${lesson.steps.length}`}>{lesson.steps.map((_, i) => <span key={i} className={i < stepIndex || (i === stepIndex && solved) ? 'done' : i === stepIndex ? 'current' : ''} />)}</div>
     <div className="lesson-heading"><div><span className="eyebrow">第 {lessons.indexOf(lesson) + 1} 课 · 跟着小棋探学</span><h1>{lesson.title}</h1><p>{lesson.subtitle}</p></div><div className="lesson-heading-actions"><div className="lesson-token">{lesson.token}</div><PlayFocusButton focused={focused} onToggle={() => setFocused(value => !value)} /></div></div>

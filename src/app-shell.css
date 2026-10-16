@@ -1,0 +1,109 @@
+/* The same routes work as normal desktop pages and as contained touch screens. */
+.app-context-title, .screen-jump { display: none; }
+.app-view[hidden] { display: none !important; }
+
+@media (any-pointer: coarse), (max-width: 900px) {
+  html, body, #root { height: 100%; overflow: hidden; }
+  body { padding: 0; overscroll-behavior: none; }
+  .app-shell { height: 100vh; height: 100dvh; display: flex; flex-direction: column; overflow: hidden; padding-bottom: calc(68px + env(safe-area-inset-bottom)); }
+  .site-header { flex: 0 0 auto; z-index: 20; padding-top: env(safe-area-inset-top); }
+  .header-inner { width: calc(100% - 32px); min-height: 56px; padding: 4px 0; gap: 12px; flex-wrap: nowrap; }
+  .brand { min-height: 48px; }
+  .brand small { display: none; }
+  .brand-mark { width: 36px; height: 36px; font-size: 24px; }
+  .brand strong { font-size: 19px; }
+  .header-tools { margin-left: auto; gap: 8px; }
+  .voice-toggle { width: 44px; height: 44px; }
+  .header-tools .sound-toggle { min-height: 44px; }
+  .app-shell > #main-content { flex: 1; min-height: 0; overflow: hidden; outline: none; }
+  .app-view { height: 100%; overflow: auto; overscroll-behavior: contain; scrollbar-width: thin; scroll-padding: 12px; }
+  .page-width { width: calc(100% - 32px); padding-bottom: 24px; }
+  .site-footer { display: none; }
+  .storage-warning { flex-shrink: 0; margin: 0; padding: 8px 16px; border-radius: 0; font-size: 12px; }
+  .header-inner .app-nav { position: fixed; z-index: 30; left: 0; right: 0; bottom: 0; height: calc(68px + env(safe-area-inset-bottom)); padding: 5px max(8px, env(safe-area-inset-right)) calc(5px + env(safe-area-inset-bottom)) max(8px, env(safe-area-inset-left)); margin: 0; width: 100%; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 5px; background: #fefef9; border-top: 1px solid #dce3d2; box-shadow: 0 -3px 18px #3d573309; }
+  .header-inner .app-nav button { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; padding: 5px 2px; font-size: 12px; min-height: 54px; border-radius: 12px; }
+  .header-inner .app-nav button svg { width: 21px; height: 21px; }
+  .header-inner .app-nav button.active:after { display: none; }
+  .header-inner .app-nav button.active { color: #355d40; background: #eaf0df; }
+  .app-context-title { align-items: center; min-width: 0; gap: 6px; }
+  .context-back { flex-shrink: 0; display: grid; place-items: center; width: 44px; height: 44px; border: 0; border-radius: 12px; background: #ecf0e3; color: #3f634b; }
+  .app-context-title h1 { margin: 0; font-size: 15px; line-height: 1.5; }
+  .completion { min-height: 0; padding: 28px 8px 36px; }
+  .locked-page { min-height: 0; }
+  .hero { margin-top: 18px; }
+  .home-aside .tip-card, .home-aside .local-note { display: none; }
+  .home-aside { display: block; }
+  .journey-card { padding: 20px; }
+  .journey-card .progress-ring { display: none; }
+  .journey-stats { margin: 16px 0; }
+  .practice-banner { margin-bottom: 0; }
+  .screen-jump { position: sticky; top: 0; z-index: 5; display: flex; align-items: center; gap: 8px; justify-content: space-between; min-height: 52px; padding: 4px 0; background: #f7f7edfa; border-bottom: 1px solid #e1e5d6; margin-bottom: 12px; }
+  .screen-jump button { display: flex; align-items: center; gap: 6px; justify-content: center; min-height: 44px; padding: 8px 10px; background: #edf2e2; color: #416348; border: 1px solid #dde5d0; border-radius: 10px; font-size: 13px; }
+  .screen-jump > span { color: #7c8b71; font-size: 11px; }
+  .lesson-page .board-card, .lesson-page .coach-card, .practice-page .board-card, .practice-page .coach-card { scroll-margin-top: 64px; }
+  .board-focused .app-shell { padding-bottom: 0; }
+  .board-focused .screen-jump { padding-top: env(safe-area-inset-top); }
+}
+
+/* The landscape tablet is one workspace: a rail, a board, and a scrollable coach. */
+@media (any-pointer: coarse) and (min-width: 900px) and (orientation: landscape) {
+  .app-shell { padding: 0 0 0 calc(88px + env(safe-area-inset-left)); }
+  .site-header { margin-left: calc(-88px - env(safe-area-inset-left)); }
+  .header-inner { width: calc(100% - 40px); }
+  .header-inner .app-nav { top: calc(57px + env(safe-area-inset-top)); bottom: 0; right: auto; height: auto; width: calc(88px + env(safe-area-inset-left)); padding: 16px 8px max(12px, env(safe-area-inset-bottom)) calc(8px + env(safe-area-inset-left)); display: flex; flex-direction: column; gap: 14px; border-top: 0; border-right: 1px solid #dce3d2; box-shadow: none; }
+  .header-inner .app-nav button { width: 100%; flex: 0 0 auto; min-height: 74px; padding: 12px 4px; gap: 8px; }
+  .page-width { width: calc(100% - 32px); }
+  .lesson-page, .practice-page { height: 100%; display: flex; flex-direction: column; padding: 8px 0; }
+  .screen-jump, .lesson-top, .step-progress, .lesson-heading .eyebrow, .lesson-heading p, .lesson-token, .mobile-task-cue { display: none; }
+  .lesson-heading { flex-shrink: 0; min-height: 48px; margin: 0 0 8px; }
+  .lesson-heading h1 { font-size: 22px; margin: 0; }
+  .practice-page > .page-title { flex-shrink: 0; min-height: 48px; padding: 0; margin: 0 0 8px; gap: 12px; }
+  .practice-page > .page-title h1 { font-size: 22px; }
+  .practice-page > .page-title .eyebrow, .practice-page > .page-title p { display: none; }
+  .practice-heading-actions { gap: 10px; }
+  .mode-switch button { min-height: 40px; padding: 6px 12px; }
+  .focus-button { min-height: 48px; padding: 8px 12px; }
+  .play-layout { display: grid; flex: 1; min-height: 0; grid-template-columns: minmax(0, 1.45fr) minmax(306px, 1fr); gap: 16px; align-items: stretch; }
+  .play-layout > .board-card { height: 100%; padding: 8px; display: flex; flex-direction: column; container-type: size; }
+  .board-card-top { min-height: 24px; flex-shrink: 0; margin: 0; padding: 0 4px; }
+  .play-layout .chess-board { flex-shrink: 0; width: min(100%, calc((100cqh - 72px) * .904109589)); max-width: 650px; margin: auto; }
+  .play-layout .board-selection { flex-shrink: 0; min-height: 48px; margin: 0; padding: 0 6px; }
+  .board-selection p { font-size: 12px; }
+  .board-selection p strong { display: inline; font-size: 13px; }
+  .board-selection p span { display: none; }
+  .board-selection button { min-height: 44px; }
+  .play-layout .board-footnote { display: none; }
+  .lesson-aside { height: 100%; min-height: 0; overflow-y: auto; position: static; overscroll-behavior: contain; scrollbar-width: thin; gap: 12px; padding-right: 2px; }
+  .lesson-aside > * { flex-shrink: 0; }
+  .coach-card { padding: 18px; }
+  .coach-top { margin-bottom: 12px; padding-bottom: 12px; }
+  .coach-card h2 { font-size: 21px; }
+  .instruction { font-size: 16px; }
+  .feedback { margin: 12px 0; padding: 12px; }
+  .gentle-note { display: none; }
+  .board-focused .app-shell { padding-left: 0; }
+  .board-focused .lesson-page, .board-focused .practice-page { padding: max(8px, env(safe-area-inset-top)) 0 max(8px, env(safe-area-inset-bottom)); }
+}
+
+@media (max-width: 650px) {
+  .lesson-screen .app-context-title { display: flex; flex: 1; }
+  .lesson-screen .brand { display: none; }
+  .lesson-screen .header-tools { gap: 5px; }
+  .lesson-screen .header-tools .sound-toggle span { display: none; }
+  .lesson-screen .header-tools .sound-toggle { width: 44px; }
+  .lesson-page { padding-top: 0; }
+  .lesson-page .lesson-top, .lesson-page .step-progress, .lesson-page .lesson-heading > div:first-child { display: none; }
+  .lesson-heading { justify-content: flex-end; margin: 0 0 10px; }
+  .lesson-heading .focus-button { min-height: 40px; padding: 6px 10px; }
+  .mobile-task-cue { margin-bottom: 12px; padding: 12px 14px; }
+  .screen-jump > span { font-size: 10px; }
+  .play-layout { gap: 14px; }
+  .practice-page > .page-title { padding-top: 0; }
+  .practice-page > .page-title .eyebrow, .practice-page > .page-title p, .practice-page .tiny-label { display: none; }
+  .practice-page > .page-title h1 { font-size: 23px; margin: 0; }
+  .practice-heading-actions { gap: 8px; }
+}
+
+@media (max-width: 650px) {
+  .app-context-title h1 { font-size: 14px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+}

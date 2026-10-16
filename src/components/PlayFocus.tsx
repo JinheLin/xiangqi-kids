@@ -3,14 +3,15 @@ import { Icon } from './Art';
 import { SoundToggle } from './Sound';
 
 /** Expands the play area without requiring fullscreen permissions or locking rotation. */
-export function usePlayFocus() {
+export function usePlayFocus(active = true) {
   const [focused, setFocused] = useState(false);
   useEffect(() => {
+    if (!active) return;
     document.documentElement.classList.toggle('board-focused', focused);
     const escape = (event: KeyboardEvent) => { if (event.key === 'Escape') setFocused(false); };
     window.addEventListener('keydown', escape);
     return () => { document.documentElement.classList.remove('board-focused'); window.removeEventListener('keydown', escape); };
-  }, [focused]);
+  }, [focused, active]);
   return { focused, setFocused };
 }
 

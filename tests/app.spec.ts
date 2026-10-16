@@ -8,10 +8,10 @@ async function solveStep(page: Page, step: Step) {
   if (step.kind === 'quiz') await page.getByRole('button', { name: new RegExp(step.options[step.answer]) }).click();
   else if (step.kind === 'identify') {
     const p = step.board.find(p => p.type === step.targetType && p.side === step.targetSide)!;
-    await page.getByTestId(`square-${p.x}-${p.y}`).click();
+    await page.locator('.app-view:not([hidden])').getByTestId(`square-${p.x}-${p.y}`).click();
   } else {
-    await page.getByTestId(`square-${step.from.x}-${step.from.y}`).click();
-    await page.getByTestId(`square-${step.to.x}-${step.to.y}`).click();
+    await page.locator('.app-view:not([hidden])').getByTestId(`square-${step.from.x}-${step.from.y}`).click();
+    await page.locator('.app-view:not([hidden])').getByTestId(`square-${step.to.x}-${step.to.y}`).click();
   }
   await expect(page.getByRole('status').filter({ hasText: step.explain })).toBeVisible();
 }
@@ -44,8 +44,8 @@ test('a child can complete all 22 lessons, unlock chapters, earn badges and rest
 test('wrong answers explain, hints and demo do not auto-complete, rewards cannot be farmed', async ({ page }) => {
   await page.addInitScript(key => localStorage.setItem(key, JSON.stringify({ version: 1, completed: { 'hello-board': 3, 'meet-team': 3, 'meet-pieces': 3 }, lastLesson: 'rook', voice: false })), STORAGE_KEY);
   await page.goto('/#/lesson/rook');
-  await page.getByTestId('square-0-8').click();
-  await page.getByTestId('square-1-7').click();
+  await page.locator('.app-view:not([hidden])').getByTestId('square-0-8').click();
+  await page.locator('.app-view:not([hidden])').getByTestId('square-1-7').click();
   await expect(page.getByRole('status').filter({ hasText: '不能斜走' })).toBeVisible();
   await page.getByRole('button', { name: '给我一点提示' }).click();
   await expect(page.getByText('找到左下方的红车。')).toBeVisible();
@@ -69,21 +69,21 @@ test('wrong answers explain, hints and demo do not auto-complete, rewards cannot
 
 test('practice supports errors, a legal companion response, undo, two players and restart', async ({ page }) => {
   await page.goto('/#/practice');
-  await page.getByTestId('square-1-9').click();
-  await page.getByTestId('square-1-7').click();
+  await page.locator('.app-view:not([hidden])').getByTestId('square-1-9').click();
+  await page.locator('.app-view:not([hidden])').getByTestId('square-1-7').click();
   // Friendly piece switches selection; choose a rook and attempt a blocked forward move.
-  await page.getByTestId('square-0-9').click();
-  await page.getByTestId('square-0-5').click();
+  await page.locator('.app-view:not([hidden])').getByTestId('square-0-9').click();
+  await page.locator('.app-view:not([hidden])').getByTestId('square-0-5').click();
   await expect(page.getByRole('status').filter({ hasText: '不能跳过' })).toBeVisible();
-  await page.getByTestId('square-0-6').click();
-  await page.getByTestId('square-0-5').click();
+  await page.locator('.app-view:not([hidden])').getByTestId('square-0-6').click();
+  await page.locator('.app-view:not([hidden])').getByTestId('square-0-5').click();
   await expect(page.getByText('已走 2 步', { exact: true })).toBeVisible();
   await page.getByRole('button', { name: '悔棋' }).click();
   await expect(page.getByText('已走 0 步', { exact: true })).toBeVisible();
   await page.getByRole('button', { name: '双人同屏' }).click();
-  await page.getByTestId('square-0-6').click(); await page.getByTestId('square-0-5').click();
+  await page.locator('.app-view:not([hidden])').getByTestId('square-0-6').click(); await page.locator('.app-view:not([hidden])').getByTestId('square-0-5').click();
   await expect(page.getByText('已走 1 步', { exact: true })).toBeVisible();
-  await page.getByTestId('square-0-3').click(); await page.getByTestId('square-0-4').click();
+  await page.locator('.app-view:not([hidden])').getByTestId('square-0-3').click(); await page.locator('.app-view:not([hidden])').getByTestId('square-0-4').click();
   await expect(page.getByText('已走 2 步', { exact: true })).toBeVisible();
   await page.getByRole('button', { name: '想想怎么走' }).click();
   await expect(page.getByRole('status').filter({ hasText: '星星' })).toBeVisible();
@@ -104,11 +104,11 @@ test('responsive pages, accessible keyboard board and invalid storage recovery',
   }
   await page.goto('/#/practice');
   await expect(page.getByRole('heading', { name: '自由练习场' })).toBeVisible();
-  await page.getByTestId('square-0-6').focus();
+  await page.locator('.app-view:not([hidden])').getByTestId('square-0-6').focus();
   await page.keyboard.press('Enter');
-  await expect(page.getByTestId('square-0-6')).toHaveAttribute('aria-pressed', 'true');
+  await expect(page.locator('.app-view:not([hidden])').getByTestId('square-0-6')).toHaveAttribute('aria-pressed', 'true');
   await page.keyboard.press('ArrowUp');
-  await expect(page.getByTestId('square-0-5')).toBeFocused();
+  await expect(page.locator('.app-view:not([hidden])').getByTestId('square-0-5')).toBeFocused();
   await page.keyboard.press('Enter');
   await expect(page.getByText('已走 2 步', { exact: true })).toBeVisible();
   await page.goto('/#/lesson/stalemate');

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { applyMove, at, choosePracticeMove, getOutcome, initialBoard, isInCheck, legalMoves, opposite, pieceLabel, pieceName, positionKey, samePoint, sideLabel, validateMove } from '../engine/xiangqi';
 import type { Board, Move, Piece, Point, Side } from '../engine/xiangqi';
 import { BoardSelection, ChessBoard } from './Board';
@@ -15,7 +15,8 @@ function advance(frames: Frame[], move: Move): Frame[] {
   return [...frames, { board: applyMove(current.board, move), turn: opposite(current.turn), lastMove: move, captured, text }];
 }
 
-export function Practice() {
+export function Practice({ active = true }: { active?: boolean }) {
+  const page = useRef<HTMLElement>(null);
   const [frames, setFrames] = useState<Frame[]>(newGame);
   const [mode, setMode] = useState<'ai' | 'duo'>('ai');
   const [selected, setSelected] = useState<Point | null>(null);
@@ -23,7 +24,7 @@ export function Practice() {
   const [hintTarget, setHintTarget] = useState<Point>();
   const [feedback, setFeedback] = useState('点一下红色棋子，就能看见它可以去的地方。');
   const [confirmReset, setConfirmReset] = useState(false);
-  const { focused, setFocused } = usePlayFocus();
+  const { focused, setFocused } = usePlayFocus(active);
   const { play } = useSound();
   const current = frames[frames.length - 1], { board, turn } = current;
   const outcome = useMemo(() => getOutcome(board, turn), [board, turn]);
@@ -39,13 +40,13 @@ export function Practice() {
   }, [play]);
 
   useEffect(() => {
-    if (!thinking) return;
+    if (!active || !thinking) return;
     const timer = window.setTimeout(() => {
       const move = choosePracticeMove(board, 'black');
       if (move) { playMove(board, move, 'black'); setFrames(old => advance(old, move)); setFeedback('小棋搭子走好啦，轮到你了。先看看自己的帅是否安全。'); }
     }, 480);
     return () => clearTimeout(timer);
-  }, [board, thinking, playMove]);
+  }, [board, thinking, playMove, active]);
 
   function onSquare(p: Point) {
     if (finished || thinking) return;
@@ -68,7 +69,8 @@ export function Practice() {
     setFrames(old => old.slice(0, Math.max(1, old.length - count)));
     setSelected(null); setHintTarget(undefined); setConfirmReset(false); setFeedback('回到上一步啦，换个想法试试。');
   }
-  return <main className="page-width practice-page">
+  return <main ref={page} className="page-width practice-page">
+    <div className="screen-jump" role="group" aria-label="练习区域"><button onClick={() => page.current?.querySelector('.board-card')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}><Icon name="grid" size={17} />看棋盘</button><span>棋局会为你保留</span><button onClick={() => page.current?.querySelector('.practice-coach')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}><Icon name="hint" size={17} />练习工具</button></div>
     <div className="page-title"><div><span className="eyebrow">把新学的本领用起来</span><h1>自由练习场<span className="tiny-label">大胆试，慢慢想</span></h1><p>和小棋搭子下一盘，或邀请家人一起玩。</p></div><div className="practice-heading-actions"><div className="mode-switch" role="group" aria-label="练习模式"><button className={mode === 'ai' ? 'active' : ''} onClick={() => { setMode('ai'); setSelected(null); setFeedback('小棋搭子执黑，你执红。红方先走。'); }}>小棋搭子</button><button className={mode === 'duo' ? 'active' : ''} onClick={() => { setMode('duo'); setSelected(null); setFeedback(`双人练习，轮到${sideLabel(turn)}。`); }}>双人同屏</button></div><PlayFocusButton focused={focused} onToggle={() => setFocused(value => !value)} /></div></div>
     <div className="play-layout"><section className="board-card"><div className="board-card-top"><span><i className={`side-dot ${turn}`} />{finished ? '本次练习结束' : thinking ? '小棋搭子思考中…' : `${sideLabel(turn)}走棋`}</span><span className={outcome.kind === 'check' ? 'check-label' : ''}>{outcome.kind === 'check' ? '将军！请先保护队长' : `已走 ${frames.length - 1} 步`}</span></div>
       <ChessBoard board={board} turn={turn} selected={selected} legal={legal} target={hintTarget} onSquare={onSquare} lastMove={current.lastMove} disabled={finished || thinking} />

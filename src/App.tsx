@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import type { ReactNode } from 'react';
 import { chapters, lessons, makePiece, pieceGuides } from './data/curriculum';
 import type { Lesson } from './data/curriculum';
 import { awardLesson, emptyProgress, firstUnfinished, isUnlocked, parseProgress, starTotal, STORAGE_KEY } from './progress';
@@ -67,12 +68,31 @@ function Growth({ progress, onReset, navigate }: { progress: Progress; onReset: 
   })}</div><section className="review-section"><h2>我的课程足迹</h2>{completed ? <div className="review-grid">{lessons.filter(l => progress.completed[l.id]).map(l => <button key={l.id} className="review-item" onClick={() => navigate(`/lesson/${l.id}`)}><span className="review-token">{l.token}</span><strong>{l.title}</strong><Stars count={progress.completed[l.id]} /><Icon name="arrow" size={17} /></button>)}</div> : <div className="empty-state"><Icon name="flag" size={32} /><p>第一堂课正在等你。<br />完成后，这里就会留下你的星星足迹。</p><button className="btn secondary" onClick={() => navigate(`/lesson/${lessons[0].id}`)}>出发吧<Icon name="arrow" size={17} /></button></div>}</section><section className="save-info"><div><h3>关于学习进度</h3><p>进度保存在当前浏览器中，不需要账号。更换浏览器、设备或清除网站数据后，进度不会同步。</p></div>{confirm ? <div className="reset-confirm"><p>确定清空这台设备上的全部课程星星和徽章？</p><div className="button-row"><button className="btn danger" onClick={() => { onReset(); setConfirm(false); }}>确定清空进度</button><button className="btn secondary" onClick={() => setConfirm(false)}>保留进度</button></div></div> : <button className="text-btn" onClick={() => setConfirm(true)}>重新开始学习</button>}</section></main>;
 }
 
+/** Keep visited screens and their scroll positions while moving around the app. */
+function AppView({ name, active, children }: { name: string; active: boolean; children: ReactNode }) {
+  const element = useRef<HTMLDivElement>(null);
+  const position = useRef({ inner: 0, page: 0 });
+  useLayoutEffect(() => {
+    if (!active) return;
+    if (element.current) element.current.scrollTop = position.current.inner;
+    window.scrollTo({ top: position.current.page, behavior: 'instant' });
+    return () => { position.current.page = window.scrollY; };
+  }, [active]);
+  return <div ref={element} className="app-view" data-view={name} hidden={!active} inert={!active} onScroll={e => { position.current.inner = e.currentTarget.scrollTop; }}>{children}</div>;
+}
+
 export default function App() {
   const [initial] = useState(readInitial);
   const [progress, setProgress] = useState(initial.progress);
   const [storageError, setStorageError] = useState(!initial.available);
   const [route, setRoute] = useState(readRoute);
-  useEffect(() => { const onHash = () => { setRoute(readRoute()); window.scrollTo({ top: 0, behavior: 'instant' }); }; window.addEventListener('hashchange', onHash); return () => window.removeEventListener('hashchange', onHash); }, []);
+  useEffect(() => {
+    const previous = history.scrollRestoration;
+    history.scrollRestoration = 'manual';
+    const onHash = () => { setRoute(readRoute()); document.getElementById('main-content')?.focus({ preventScroll: true }); };
+    window.addEventListener('hashchange', onHash);
+    return () => { history.scrollRestoration = previous; window.removeEventListener('hashchange', onHash); };
+  }, []);
   useEffect(() => { try { localStorage.setItem(STORAGE_KEY, JSON.stringify(progress)); setStorageError(false); } catch { setStorageError(true); } }, [progress]);
   useEffect(() => { const sync = (e: StorageEvent) => { if (e.key === STORAGE_KEY) setProgress(parseProgress(e.newValue)); }; window.addEventListener('storage', sync); return () => window.removeEventListener('storage', sync); }, []);
   const navigate: Navigate = path => { window.location.hash = path; };
@@ -80,14 +100,26 @@ export default function App() {
   const allowed = lesson && isUnlocked(lessons.indexOf(lesson), progress);
   useEffect(() => { if (lesson && allowed) setProgress(old => old.lastLesson === lesson.id ? old : { ...old, lastLesson: lesson.id }); }, [lesson, allowed]);
   useEffect(() => { document.title = `${lesson ? lesson.title : navItems.find(n => n.route === route)?.title || '一起学象棋'} · 小棋探`; }, [route, lesson]);
-  let content;
-  if (lesson && allowed) content = <LessonPlayer key={lesson.id} lesson={lesson} voice={progress.voice} onComplete={(id, stars) => setProgress(old => awardLesson(old, id, stars))} navigate={navigate} />;
-  else if (lesson) content = <main className="page-width empty-state locked-page"><Icon name="lock" size={40} /><h1>先把前面的本领学会吧</h1><p>完成前一课，这一课就会解锁。</p><button className="btn primary" onClick={() => navigate('/learn')}>回到学习地图<Icon name="arrow" /></button></main>;
-  else if (route === '/practice') content = <Practice />;
-  else if (route === '/pieces') content = <PieceLibrary progress={progress} navigate={navigate} />;
-  else if (route === '/progress') content = <Growth progress={progress} onReset={() => setProgress(emptyProgress())} navigate={navigate} />;
-  else content = <LearningMap progress={progress} navigate={navigate} />;
-  return <SoundProvider enabled={progress.sound} onEnabledChange={enabled => setProgress(old => ({ ...old, sound: enabled }))}><a className="skip-link" href="#main-content" onClick={e => { e.preventDefault(); document.getElementById('main-content')?.focus(); document.getElementById('main-content')?.scrollIntoView(); }}>跳到主要内容</a><header className="site-header"><div className="header-inner"><button className="brand" onClick={() => navigate('/learn')} aria-label="小棋探，回到学习地图"><span className="brand-mark">馬</span><span><strong>小棋探<span className="brand-spark">✦</span></strong><small>每一步，都有新发现</small></span></button><nav aria-label="主要导航">{navItems.map(item => <button key={item.route} className={route === item.route || (item.route === '/learn' && route.startsWith('/lesson/')) ? 'active' : ''} aria-current={route === item.route ? 'page' : undefined} onClick={() => navigate(item.route)}><Icon name={item.icon} size={18} />{item.title}</button>)}</nav><div className="header-tools"><span className="star-counter" aria-label={`已收集 ${starTotal(progress)} 颗星星`}><Icon name="star" size={18} />{starTotal(progress)}</span><SoundToggle /><button className={`voice-toggle ${progress.voice ? 'on' : ''}`} aria-label={progress.voice ? '关闭语音讲解' : '开启语音讲解'} title={progress.voice ? '关闭语音讲解' : '开启语音讲解'} aria-pressed={progress.voice} disabled={!('speechSynthesis' in window)} onClick={() => setProgress(old => ({ ...old, voice: !old.voice }))}><Icon name={progress.voice ? 'volume' : 'mute'} size={19} /></button></div></div></header>
+  const primaryRoute = navItems.some(item => item.route === route) ? route : '/learn';
+  const isLesson = !!lesson && !!allowed;
+  const [visited, setVisited] = useState(() => new Set([primaryRoute]));
+  const [cachedLesson, setCachedLesson] = useState<Lesson>();
+  const currentLesson = isLesson ? lesson : cachedLesson;
+  useEffect(() => {
+    if (!lesson) setVisited(old => old.has(primaryRoute) ? old : new Set([...old, primaryRoute]));
+    if (isLesson) setCachedLesson(lesson);
+  }, [primaryRoute, isLesson, lesson]);
+  const screenTitle = lesson?.title || navItems.find(item => item.route === primaryRoute)!.title;
+  const nav = <nav className="app-nav" aria-label="主要导航">{navItems.map(item => <button key={item.route} className={primaryRoute === item.route ? 'active' : ''} aria-current={primaryRoute === item.route ? 'page' : undefined} onClick={() => navigate(item.route)}><Icon name={item.icon} size={20} /><span>{item.title}</span></button>)}</nav>;
+  const content = <>
+    {(visited.has('/learn') || (!lesson && primaryRoute === '/learn')) && <AppView name="/learn" active={!lesson && primaryRoute === '/learn'}><LearningMap progress={progress} navigate={navigate} /></AppView>}
+    {(visited.has('/practice') || route === '/practice') && <AppView name="/practice" active={route === '/practice'}><Practice active={route === '/practice'} /></AppView>}
+    {(visited.has('/pieces') || route === '/pieces') && <AppView name="/pieces" active={route === '/pieces'}><PieceLibrary progress={progress} navigate={navigate} /></AppView>}
+    {(visited.has('/progress') || route === '/progress') && <AppView name="/progress" active={route === '/progress'}><Growth progress={progress} onReset={() => { setProgress(emptyProgress()); setCachedLesson(undefined); }} navigate={navigate} /></AppView>}
+    {currentLesson && <AppView key={currentLesson.id} name="lesson" active={isLesson}><LessonPlayer active={isLesson} lesson={currentLesson} voice={progress.voice} onComplete={(id, stars) => { setProgress(old => awardLesson(old, id, stars)); setCachedLesson(undefined); }} navigate={navigate} /></AppView>}
+    {lesson && !allowed && <AppView name="locked" active><main className="page-width empty-state locked-page"><Icon name="lock" size={40} /><h1>先把前面的本领学会吧</h1><p>完成前一课，这一课就会解锁。</p><button className="btn primary" onClick={() => navigate('/learn')}>回到学习地图<Icon name="arrow" /></button></main></AppView>}
+  </>;
+  return <SoundProvider enabled={progress.sound} onEnabledChange={enabled => setProgress(old => ({ ...old, sound: enabled }))}><div className={`app-shell ${lesson ? 'lesson-screen' : ''}`}><a className="skip-link" href="#main-content" onClick={e => { e.preventDefault(); document.getElementById('main-content')?.focus(); document.getElementById('main-content')?.scrollIntoView(); }}>跳到主要内容</a><header className="site-header"><div className="header-inner">{lesson && <div className="app-context-title"><button className="context-back" aria-label="返回学习地图" onClick={() => navigate('/learn')}><Icon name="back" size={22} /></button><h1>{screenTitle}</h1></div>}<button className="brand" onClick={() => navigate('/learn')} aria-label="小棋探，回到学习地图"><span className="brand-mark">馬</span><span><strong>小棋探<span className="brand-spark">✦</span></strong><small>每一步，都有新发现</small></span></button>{nav}<div className="header-tools"><span className="star-counter" aria-label={`已收集 ${starTotal(progress)} 颗星星`}><Icon name="star" size={18} />{starTotal(progress)}</span><SoundToggle /><button className={`voice-toggle ${progress.voice ? 'on' : ''}`} aria-label={progress.voice ? '关闭语音讲解' : '开启语音讲解'} title={progress.voice ? '关闭语音讲解' : '开启语音讲解'} aria-pressed={progress.voice} disabled={!('speechSynthesis' in window)} onClick={() => setProgress(old => ({ ...old, voice: !old.voice }))}><Icon name={progress.voice ? 'volume' : 'mute'} size={19} /></button></div></div></header>
     {storageError && <div className="storage-warning" role="alert">当前浏览器无法保存进度。你仍然可以学习，但关闭页面后星星可能会丢失。</div>}<div id="main-content" tabIndex={-1}>{content}</div><footer className="site-footer"><span><span className="footer-knight">♞</span> 小棋探 · 让思考，慢慢开花</span><span>没有广告 · 不用注册 · 快乐学象棋</span></footer>
-  </SoundProvider>;
+  </div></SoundProvider>;
 }
