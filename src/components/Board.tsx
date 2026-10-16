@@ -1,13 +1,26 @@
 import { useRef, useState } from 'react';
 import { at, isInCheck, pieceName, pieceLabel, samePoint } from '../engine/xiangqi';
-import type { Board as BoardState, Move, Point, Side } from '../engine/xiangqi';
+import type { Board as BoardState, Move, Piece, Point, Side } from '../engine/xiangqi';
+import type { PointerEvent } from 'react';
 
 interface BoardProps { board: BoardState; onSquare?: (p: Point) => void; selected?: Point | null; legal?: Point[]; target?: Point; lastMove?: Move | null; turn?: Side; disabled?: boolean; highlight?: Point[] }
 const squares = Array.from({ length: 90 }, (_, i) => ({ x: i % 9, y: Math.floor(i / 9) }));
 export function ChessBoard({ board, onSquare, selected, legal = [], target, lastMove, turn = 'red', disabled, highlight = [] }: BoardProps) {
   const refs = useRef<(HTMLButtonElement | null)[]>([]);
   const [focus, setFocus] = useState(85);
+  const touch = useRef<{ id: number; x: number; y: number; time: number; cancelled: boolean } | null>(null);
+  const ignoreClick = useRef(false);
   const checked = isInCheck(board, turn);
+  function trackTouch(event: PointerEvent<HTMLDivElement>) {
+    if (event.pointerType === 'mouse') { touch.current = null; ignoreClick.current = false; return; }
+    if (!event.isPrimary) {
+      if (touch.current) touch.current.cancelled = true;
+      ignoreClick.current = true;
+      return;
+    }
+    ignoreClick.current = false;
+    touch.current = { id: event.pointerId, x: event.clientX, y: event.clientY, time: event.timeStamp, cancelled: false };
+  }
   return <div className="chess-board" role="group" aria-label="中国象棋棋盘，9 列 10 行。方向键移动，回车选择。">
     <svg className="board-lines" viewBox="0 0 528 584" aria-hidden="true">
       <rect x="21" y="21" width="486" height="542" rx="2" fill="none" stroke="#BDA477" strokeWidth="1" />
@@ -22,7 +35,16 @@ export function ChessBoard({ board, onSquare, selected, legal = [], target, last
       <g fill="#907D58" fontSize="24" fontFamily="serif" letterSpacing="12"><text x="115" y="301">楚河</text><text x="333" y="301">汉界</text></g>
       <g fill="#998A6D" fontSize="11" textAnchor="middle">{Array.from({ length: 9 }, (_, x) => <g key={`coord${x}`}><text x={40 + x * 56} y="15">{x + 1}</text><text x={40 + x * 56} y="577">{['九', '八', '七', '六', '五', '四', '三', '二', '一'][x]}</text></g>)}</g>
     </svg>
-    <div className="board-squares" onKeyDown={e => {
+    <div className="board-squares" onContextMenu={e => e.preventDefault()} onPointerDown={trackTouch} onPointerMove={e => {
+      const gesture = touch.current;
+      if (gesture && gesture.id === e.pointerId && Math.hypot(e.clientX - gesture.x, e.clientY - gesture.y) > 12) gesture.cancelled = true;
+    }} onPointerUp={e => {
+      const gesture = touch.current;
+      if (gesture && gesture.id === e.pointerId) {
+        ignoreClick.current = gesture.cancelled || e.timeStamp - gesture.time > 650;
+        touch.current = null;
+      }
+    }} onPointerCancel={() => { touch.current = null; ignoreClick.current = true; }} onKeyDown={e => {
       const change = { ArrowLeft: -1, ArrowRight: 1, ArrowUp: -9, ArrowDown: 9 }[e.key];
       if (change === undefined) return;
       e.preventDefault();
@@ -37,7 +59,7 @@ export function ChessBoard({ board, onSquare, selected, legal = [], target, last
         const marked = highlight.some(t => samePoint(p, t));
         const last = !!lastMove && (samePoint(p, lastMove.from) || samePoint(p, lastMove.to));
         const inCheck = piece?.type === 'general' && piece.side === turn && checked;
-        return <button key={i} ref={el => { refs.current[i] = el; }} type="button" tabIndex={focus === i ? 0 : -1} onFocus={() => setFocus(i)} aria-disabled={disabled || !onSquare} aria-label={`${piece ? pieceName(piece) : '空位'}，第${p.x + 1}列第${p.y + 1}行${isTarget ? '，目标' : ''}${chosen ? '，已选中' : ''}${inCheck ? '，被将军' : ''}`} aria-pressed={chosen} className={`square ${chosen ? 'selected' : ''} ${possible ? 'possible' : ''} ${last ? 'last-move' : ''} ${marked ? 'highlighted' : ''} ${inCheck ? 'in-check' : ''}`} data-testid={`square-${p.x}-${p.y}`} onClick={() => { if (!disabled) onSquare?.(p); }}>
+        return <button key={i} ref={el => { refs.current[i] = el; }} type="button" tabIndex={focus === i ? 0 : -1} onFocus={() => setFocus(i)} aria-disabled={disabled || !onSquare} aria-label={`${piece ? pieceName(piece) : '空位'}，第${p.x + 1}列第${p.y + 1}行${isTarget ? '，目标' : ''}${chosen ? '，已选中' : ''}${inCheck ? '，被将军' : ''}`} aria-pressed={chosen} className={`square ${chosen ? 'selected' : ''} ${possible ? 'possible' : ''} ${last ? 'last-move' : ''} ${marked ? 'highlighted' : ''} ${inCheck ? 'in-check' : ''}`} data-testid={`square-${p.x}-${p.y}`} onClick={e => { if (!disabled && (e.detail === 0 || !ignoreClick.current)) onSquare?.(p); }}>
           {isTarget && <span className={`target-star ${piece ? 'with-piece' : ''}`} aria-hidden="true">✦</span>}
           {piece && <span className={`piece ${piece.side}`} data-piece={piece.type}>{pieceLabel(piece)}</span>}
           {possible && !piece && !isTarget && <span className="legal-dot" />}
@@ -45,5 +67,12 @@ export function ChessBoard({ board, onSquare, selected, legal = [], target, last
         </button>;
       })}
     </div>
+  </div>;
+}
+
+export function BoardSelection({ piece, onCancel, message }: { piece?: Piece; onCancel: () => void; message: string }) {
+  return <div className={`board-selection ${piece ? 'has-selection' : ''}`}>
+    <p aria-live="polite">{piece ? <><strong>已选{pieceName(piece)}</strong><span>再点一下要去的位置</span></> : message}</p>
+    {piece && <button className="text-btn" onClick={onCancel}>取消选择</button>}
   </div>;
 }

@@ -3,8 +3,9 @@ import { applyMove, at, legalMoves, pieceName, samePoint, validateMove } from '.
 import type { Point } from '../engine/xiangqi';
 import type { Lesson } from '../data/curriculum';
 import { chapters, lessons } from '../data/curriculum';
-import { ChessBoard } from './Board';
+import { BoardSelection, ChessBoard } from './Board';
 import { HorseArt, Icon, Stars } from './Art';
+import { PlayFocusButton, usePlayFocus } from './PlayFocus';
 
 export function speak(text: string, enabled: boolean) {
   if (!enabled || !('speechSynthesis' in window)) return;
@@ -29,6 +30,7 @@ export function LessonPlayer({ lesson, voice, onComplete, navigate }: { lesson: 
   const [finished, setFinished] = useState(false);
   const [demo, setDemo] = useState(false);
   const [wrongOption, setWrongOption] = useState<number | null>(null);
+  const { focused, setFocused } = usePlayFocus();
   const stars = mistakes === 0 && totalHints === 0 ? 3 : mistakes <= 3 ? 2 : 1;
   const nextLesson = lessons[lessons.findIndex(l => l.id === lesson.id) + 1];
 
@@ -69,7 +71,7 @@ export function LessonPlayer({ lesson, voice, onComplete, navigate }: { lesson: 
     setBoard(applyMove(board, move)); success();
   }
   function next() {
-    if (stepIndex === lesson.steps.length - 1) { onComplete(lesson.id, stars); setFinished(true); return; }
+    if (stepIndex === lesson.steps.length - 1) { onComplete(lesson.id, stars); setFocused(false); setFinished(true); return; }
     const next = lesson.steps[stepIndex + 1];
     setStepIndex(n => n + 1); setBoard(next.board); setSelected(null); setSolved(false); setFeedback(null); setHints(0); setWrongOption(null);
   }
@@ -86,11 +88,12 @@ export function LessonPlayer({ lesson, voice, onComplete, navigate }: { lesson: 
   return <main className="lesson-page page-width">
     <div className="lesson-top"><button className="text-btn" onClick={() => navigate('/learn')}><Icon name="back" />学习地图</button><span>第 {lesson.chapter + 1} 章 · {chapters[lesson.chapter].title}</span><span className="step-label">{stepIndex + 1} / {lesson.steps.length} 个小任务</span></div>
     <div className="step-progress" aria-label={`课程进度 ${stepIndex + 1}/${lesson.steps.length}`}>{lesson.steps.map((_, i) => <span key={i} className={i < stepIndex || (i === stepIndex && solved) ? 'done' : i === stepIndex ? 'current' : ''} />)}</div>
-    <div className="lesson-heading"><div><span className="eyebrow">第 {lessons.indexOf(lesson) + 1} 课 · 跟着小棋探学</span><h1>{lesson.title}</h1><p>{lesson.subtitle}</p></div><div className="lesson-token">{lesson.token}</div></div>
+    <div className="lesson-heading"><div><span className="eyebrow">第 {lessons.indexOf(lesson) + 1} 课 · 跟着小棋探学</span><h1>{lesson.title}</h1><p>{lesson.subtitle}</p></div><div className="lesson-heading-actions"><div className="lesson-token">{lesson.token}</div><PlayFocusButton focused={focused} onToggle={() => setFocused(value => !value)} /></div></div>
     <div className="mobile-task-cue"><strong>{step.title}</strong><p>{step.instruction}</p></div>
     <div className="play-layout">
       <section className="board-card"><div className="board-card-top"><span><i className="side-dot" />{step.kind === 'move' ? '红方走棋' : '一起观察棋盘'}</span><span>{step.kind === 'move' ? '✦ 星星是这次的目的地' : '红方在下 · 黑方在上'}</span></div>
         <ChessBoard board={board} selected={selected} legal={legal} target={step.kind === 'move' ? step.to : undefined} onSquare={onSquare} disabled={solved || demo || step.kind === 'quiz'} highlight={highlighted} />
+        {step.kind !== 'quiz' && <BoardSelection piece={selected ? at(board, selected) : undefined} onCancel={() => setSelected(null)} message={demo ? '看好啦，演示后你来试一次。' : solved ? '真棒，走对啦！到讲解区继续下一个小任务。' : step.kind === 'identify' ? '找到棋子后，轻轻点一下。' : '轻点红棋，再点星星；选错棋子可以取消。'} />}
         <p className="board-footnote">{step.kind === 'identify' ? '找到棋子，轻轻点一下' : step.kind === 'quiz' ? '观察棋盘，在旁边选出答案' : '先点棋子，再点落点'}<span>支持方向键与回车操作</span></p>
       </section>
       <aside className="lesson-aside">

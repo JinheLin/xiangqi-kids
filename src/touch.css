@@ -1,0 +1,172 @@
+/* Touch targets stay separate from the visible chess pieces: the whole cell is tappable. */
+html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+button, a, input { touch-action: manipulation; }
+.chess-board { -webkit-touch-callout: none; }
+.board-squares { touch-action: manipulation; }
+.square .piece, .square .target-star, .square .legal-dot { pointer-events: none; }
+.lesson-heading-actions, .practice-heading-actions { display: flex; align-items: center; gap: 14px; }
+.focus-button { min-height: 48px; font-size: 14px; padding: 10px 16px; }
+.board-selection { display: flex; align-items: center; justify-content: space-between; gap: 10px; min-height: 56px; margin-top: 6px; padding: 4px 8px; border-radius: 9px; color: #738365; background: #f5f5e9; }
+.board-selection p { margin: 0; font-size: 12px; line-height: 1.7; }
+.board-selection p strong { display: block; color: #385f41; font-size: 14px; }
+.board-selection p span { color: #728368; font-size: 12px; }
+.board-selection.has-selection { background: #eaf0dc; }
+.board-selection button { min-width: 84px; min-height: 48px; padding: 8px 10px; flex-shrink: 0; font-size: 13px; }
+
+/* All coarse pointers, including Android tablets with a keyboard or stylus attached. */
+@media (any-pointer: coarse) {
+  .btn, .text-btn, .header-inner nav button, .mode-switch button, .quiz-option { min-height: 48px; }
+  .voice-toggle { width: 48px; height: 48px; }
+  .brand { min-height: 48px; }
+  .header-inner nav button { font-size: 14px; }
+  .header-inner nav svg { width: 19px; height: 19px; }
+  .text-btn { padding: 10px 12px; }
+  .btn, .help-actions .btn, .help-actions .text-btn, .practice-tools .btn { font-size: 14px; min-height: 48px; }
+  .coach-top strong { font-size: 15px; }
+  .coach-top div > span { font-size: 12px; }
+  .instruction, .practice-message p { font-size: 16px; line-height: 1.85; }
+  .quiz-option { font-size: 16px; min-height: 54px; padding: 12px 14px; }
+  .feedback, .hint-box { font-size: 14px; line-height: 1.8; }
+  .hint-box strong { font-size: 13px; }
+  .task-count { font-size: 12px; }
+  .toggle-line { min-height: 56px; margin: 12px 0; font-size: 14px; }
+  .toggle-line input { width: 48px; height: 48px; right: -4px; }
+  .toggle-visual { width: 40px; height: 24px; }
+  .toggle-visual:after { width: 18px; height: 18px; }
+  .toggle-line input:checked + .toggle-visual:after { transform: translateX(16px); }
+  .piece { font-size: clamp(24px, 3.2vw, 34px); }
+  .square.selected { background: #abc78b45; border-radius: 50%; }
+  .square.selected .piece { outline: 2px solid #fff9df; outline-offset: 3px; }
+  .legal-dot { width: 28%; height: 28%; opacity: .88; box-shadow: 0 0 0 3px #658a611c; }
+  .capture-ring { border-width: 3px; }
+  .target-star { font-size: 34px; }
+  .lesson-card h3 { font-size: 17px; }
+  .lesson-card p { font-size: 13px; line-height: 1.8; }
+  .card-bottom { font-size: 12px; }
+  .chapter-toggle { min-height: 76px; }
+  .chapter-title strong { font-size: 17px; }
+  .chapter-title > span { font-size: 13px; }
+  .chapter-title small, .chapter-count { font-size: 12px; }
+  .piece-selector button { min-height: 96px; }
+  .piece-selector strong { font-size: 13px; }
+  .review-item { min-height: 64px; }
+  .reset-game { min-height: 48px; margin: 8px auto 0; }
+  .practice-rules summary { min-height: 40px; display: flex; align-items: center; font-size: 13px; }
+}
+
+/* No mouse hover state should stick to a finger tap. */
+@media (hover: none) {
+  .lesson-card:not(.locked):hover { transform: none; box-shadow: none; }
+  .lesson-card.current:hover { box-shadow: 0 3px 0 #d7dfc8; }
+  .square:not([aria-disabled=true]):not(.selected):hover { background: transparent; }
+  .btn.primary:hover:not(:disabled) { transform: none; box-shadow: 0 4px 0 #294735; background: var(--green); }
+}
+
+/* OPPO Pad3 has a 7:5 screen. Fit the board to the usable browser height,
+   with a 456px floor so tablet intersections never shrink below 48px. */
+@media (min-width: 900px) and (max-width: 1600px) and (orientation: landscape) {
+  .header-inner { min-height: 72px; padding: 8px 0; flex-wrap: nowrap; width: calc(100% - 48px); gap: 20px; }
+  .header-inner nav { order: initial; width: auto; padding: 0; gap: 5px; margin: auto; }
+  .header-inner nav button { padding: 10px 12px; }
+  .page-width { width: min(1280px, calc(100% - 48px)); }
+  .play-layout { grid-template-columns: minmax(480px, 1.35fr) minmax(320px, 1fr); gap: 22px; }
+  .lesson-page { padding-top: 12px; }
+  .lesson-top { display: none; }
+  .step-progress { margin: 0 0 12px; }
+  .lesson-heading { margin-bottom: 14px; }
+  .lesson-heading h1 { font-size: 25px; margin: 3px 0 0; line-height: 1.4; }
+  .lesson-heading .eyebrow { font-size: 11px; line-height: 1.5; }
+  .lesson-heading p, .lesson-token { display: none; }
+  .practice-page > .page-title { padding: 18px 0; flex-direction: row; align-items: center; }
+  .practice-page > .page-title h1 { font-size: 26px; margin: 0; line-height: 1.5; }
+  .practice-page > .page-title .eyebrow, .practice-page > .page-title p { display: none; }
+  .practice-page .tiny-label { display: none; }
+  .mode-switch button { min-height: 44px; font-size: 14px; padding: 9px 14px; }
+  .practice-heading-actions { gap: 12px; }
+  .board-card { padding: 12px 10px 10px; }
+  .board-card-top { min-height: 22px; margin-bottom: 8px; padding: 0 4px; }
+  .board-card-top > span:first-child { font-size: 13px; }
+  .board-card-top > span:last-child { font-size: 12px; }
+  .play-layout .chess-board { width: min(100%, clamp(456px, calc((100svh - 310px) * .904109589), 600px)); max-width: none; }
+  .play-layout .board-footnote { display: none; }
+  .lesson-aside { position: sticky; top: 12px; gap: 14px; }
+  .coach-card { padding: 18px 20px; }
+  .coach-top { margin-bottom: 16px; padding-bottom: 14px; }
+  .coach-card h2 { font-size: 22px; margin-bottom: 10px; }
+  .feedback { margin: 16px 0; }
+  .help-actions { gap: 10px; }
+  .help-actions .btn { flex: 1; }
+  .help-actions .text-btn { padding: 10px 12px; }
+  .practice-message p { min-height: 64px; }
+  .practice-tools { flex-wrap: nowrap; gap: 10px; }
+  .move-log { padding: 16px 18px; }
+  .move-log-list { max-height: 110px; }
+  .gentle-note { display: none; }
+}
+
+/* Portrait tablets use their full width for the board rather than squeezing it
+   into the narrow desktop column. Rotation does not remount the game. */
+@media (min-width: 651px) and (max-width: 1200px) and (orientation: portrait) {
+  .play-layout { display: grid; grid-template-columns: 1fr; gap: 22px; }
+  .play-layout > .board-card { width: 100%; max-width: 680px; justify-self: center; }
+  .play-layout .chess-board { max-width: 600px; }
+  .lesson-aside { width: 100%; max-width: 680px; justify-self: center; }
+  .coach-card { padding: 24px; }
+  .coach-card h2 { font-size: 24px; }
+  .board-card-top { font-size: 13px; }
+  .board-card-top > span:last-child { font-size: 12px; }
+  .mobile-task-cue { display: block; padding: 16px 20px; margin-bottom: 18px; border: 1px solid #dfe7d1; border-radius: 12px; background: #edf2e2; }
+  .mobile-task-cue strong { font-size: 16px; }
+  .mobile-task-cue p { margin-top: 6px; font-size: 15px; line-height: 1.8; color: #738365; }
+  .practice-heading-actions { flex-wrap: wrap; justify-content: flex-end; }
+  .library-layout { grid-template-columns: 1fr; gap: 28px; }
+  .library-layout > .board-card { max-width: 680px; justify-self: center; width: 100%; }
+  .library-layout .chess-board { max-width: 600px; }
+  .guide-detail { padding: 0 20px; }
+}
+
+/* Focus mode is reversible and leaves browser zoom and rotation available. */
+.board-focused .site-header, .board-focused .site-footer { display: none; }
+.board-focused .lesson-page, .board-focused .practice-page { padding-top: max(12px, env(safe-area-inset-top)); }
+.board-focused .lesson-top, .board-focused .step-progress, .board-focused .lesson-heading .eyebrow,
+.board-focused .lesson-heading p, .board-focused .lesson-token,
+.board-focused .practice-page > .page-title .eyebrow, .board-focused .practice-page > .page-title p,
+.board-focused .tiny-label { display: none; }
+.board-focused .lesson-heading { margin-bottom: 12px; }
+.board-focused .lesson-heading h1, .board-focused .page-title h1 { font-size: 22px; margin: 0; }
+.board-focused .practice-page > .page-title { padding: 0 0 12px; }
+@media (min-width: 900px) and (orientation: landscape) {
+  .board-focused .play-layout .chess-board { width: min(100%, clamp(456px, calc((100svh - 200px) * .904109589), 650px)); max-width: none; }
+}
+
+@media (max-width: 899px) {
+  .lesson-heading-actions { gap: 8px; }
+  .lesson-heading-actions .lesson-token { display: none; }
+  .focus-button { padding: 10px 12px; font-size: 13px; }
+}
+@media (max-width: 650px) {
+  .header-inner nav button { font-size: 12px; padding: 10px 5px; gap: 5px; }
+  .header-inner nav svg { width: 16px; height: 16px; }
+  .practice-heading-actions { width: 100%; gap: 10px; flex-wrap: wrap; }
+  .practice-heading-actions .mode-switch { flex: 1; width: auto; min-width: 200px; }
+  .practice-heading-actions .focus-button { margin-left: auto; }
+  .lesson-heading h1 { font-size: 22px; }
+  .lesson-heading { gap: 12px; }
+  .board-selection { padding: 4px 6px; gap: 6px; }
+  .board-selection button { min-width: 76px; font-size: 12px; }
+  .board-selection p { font-size: 11px; }
+  .piece { font-size: clamp(21px, 6.2vw, 30px); }
+  .hero p { font-size: 12px; max-width: 195px; line-height: 1.9; }
+  .hero-copy { padding-bottom: 28px; }
+  .hero-art { bottom: 32px; }
+  .lesson-card h3 { font-size: 15px; }
+  .card-bottom { font-size: 11px; }
+  .coach-card .help-actions { gap: 12px; }
+  .coach-card .btn.full { white-space: normal; line-height: 1.6; }
+}
+
+/* Safe-area padding for standalone browsers and Android gesture navigation. */
+@supports (padding: env(safe-area-inset-bottom)) {
+  body { padding-bottom: env(safe-area-inset-bottom); }
+  .header-inner { padding-left: env(safe-area-inset-left); padding-right: env(safe-area-inset-right); }
+}

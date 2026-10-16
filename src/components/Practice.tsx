@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useState } from 'react';
 import { applyMove, at, choosePracticeMove, getOutcome, initialBoard, isInCheck, legalMoves, opposite, pieceLabel, pieceName, positionKey, samePoint, sideLabel, validateMove } from '../engine/xiangqi';
 import type { Board, Move, Piece, Point, Side } from '../engine/xiangqi';
-import { ChessBoard } from './Board';
+import { BoardSelection, ChessBoard } from './Board';
 import { HorseArt, Icon } from './Art';
+import { PlayFocusButton, usePlayFocus } from './PlayFocus';
 
 interface Frame { board: Board; turn: Side; lastMove: Move | null; captured?: Piece; text: string }
 const newGame = (): Frame[] => [{ board: initialBoard(), turn: 'red', lastMove: null, text: '新的一局，红方先走。' }];
@@ -21,6 +22,7 @@ export function Practice() {
   const [hintTarget, setHintTarget] = useState<Point>();
   const [feedback, setFeedback] = useState('点一下红色棋子，就能看见它可以去的地方。');
   const [confirmReset, setConfirmReset] = useState(false);
+  const { focused, setFocused } = usePlayFocus();
   const current = frames[frames.length - 1], { board, turn } = current;
   const outcome = useMemo(() => getOutcome(board, turn), [board, turn]);
   const repeated = frames.filter(frame => positionKey(frame.board, frame.turn) === positionKey(board, turn)).length >= 3;
@@ -57,9 +59,10 @@ export function Practice() {
     setSelected(null); setHintTarget(undefined); setConfirmReset(false); setFeedback('回到上一步啦，换个想法试试。');
   }
   return <main className="page-width practice-page">
-    <div className="page-title"><div><span className="eyebrow">把新学的本领用起来</span><h1>自由练习场<span className="tiny-label">大胆试，慢慢想</span></h1><p>和小棋搭子下一盘，或邀请家人一起玩。</p></div><div className="mode-switch" role="group" aria-label="练习模式"><button className={mode === 'ai' ? 'active' : ''} onClick={() => { setMode('ai'); setSelected(null); setFeedback('小棋搭子执黑，你执红。红方先走。'); }}>小棋搭子</button><button className={mode === 'duo' ? 'active' : ''} onClick={() => { setMode('duo'); setSelected(null); setFeedback(`双人练习，轮到${sideLabel(turn)}。`); }}>双人同屏</button></div></div>
+    <div className="page-title"><div><span className="eyebrow">把新学的本领用起来</span><h1>自由练习场<span className="tiny-label">大胆试，慢慢想</span></h1><p>和小棋搭子下一盘，或邀请家人一起玩。</p></div><div className="practice-heading-actions"><div className="mode-switch" role="group" aria-label="练习模式"><button className={mode === 'ai' ? 'active' : ''} onClick={() => { setMode('ai'); setSelected(null); setFeedback('小棋搭子执黑，你执红。红方先走。'); }}>小棋搭子</button><button className={mode === 'duo' ? 'active' : ''} onClick={() => { setMode('duo'); setSelected(null); setFeedback(`双人练习，轮到${sideLabel(turn)}。`); }}>双人同屏</button></div><PlayFocusButton focused={focused} onToggle={() => setFocused(value => !value)} /></div></div>
     <div className="play-layout"><section className="board-card"><div className="board-card-top"><span><i className={`side-dot ${turn}`} />{finished ? '本次练习结束' : thinking ? '小棋搭子思考中…' : `${sideLabel(turn)}走棋`}</span><span className={outcome.kind === 'check' ? 'check-label' : ''}>{outcome.kind === 'check' ? '将军！请先保护队长' : `已走 ${frames.length - 1} 步`}</span></div>
       <ChessBoard board={board} turn={turn} selected={selected} legal={legal} target={hintTarget} onSquare={onSquare} lastMove={current.lastMove} disabled={finished || thinking} />
+      <BoardSelection piece={selected ? at(board, selected) : undefined} onCancel={() => { setSelected(null); setHintTarget(undefined); }} message={finished ? '本次练习结束，可以悔棋或重新开始。' : thinking ? '小棋搭子正在思考，马上轮到你。' : '轻点自己的棋子，再点落点；选错可以取消。'} />
       <p className="board-footnote">先点棋子，再点落点<span>红方在下 · 黑方在上</span></p>
     </section><aside className="lesson-aside">
       <section className="coach-card practice-coach"><div className="coach-top"><span className="coach-avatar"><HorseArt small /></span><div><strong>{mode === 'ai' ? '你的小棋搭子' : '一起下，更开心'}</strong><span>{mode === 'ai' ? '你执红棋，我来执黑棋' : '两位棋手轮流走棋'}</span></div></div>
