@@ -16,8 +16,11 @@ test('touch navigation stays anchored while only the active screen scrolls, with
   page.on('request', request => { if (request.resourceType() === 'document') documents.push(request.url()); });
   await page.goto('/#/learn');
   const origin = await page.evaluate(() => performance.timeOrigin);
-  await screen(page).evaluate(element => { element.scrollTop = element.scrollHeight; });
-  await expect.poll(() => screen(page).evaluate(element => element.scrollTop)).toBeGreaterThan(100);
+  const tablet = info.project.name.includes('landscape') || info.project.name.includes('large') || info.project.name.includes('browser-bars');
+  if (tablet) await screen(page).getByRole('button', { name: /第 2 章/ }).tap();
+  const scrollArea = tablet ? screen(page).locator('.lesson-grid') : screen(page);
+  await scrollArea.evaluate(element => { element.scrollTop = element.scrollHeight; });
+  await expect.poll(() => scrollArea.evaluate(element => element.scrollTop)).toBeGreaterThan(100);
   for (const name of ['学习地图', '自由练习', '棋子图鉴', '我的成长']) await expect(nav(page, name)).toBeInViewport({ ratio: 1 });
   expect(await page.evaluate(() => scrollY)).toBe(0);
   expect(await page.evaluate(() => document.documentElement.scrollHeight <= innerHeight)).toBe(true);
@@ -117,7 +120,7 @@ test('short landscape screens scroll the quiz coach independently without moving
   await page.goto('/#/lesson/hello-board');
   await page.getByRole('button', { name: '给我一点提示' }).tap();
   const board = await screen(page).locator('.chess-board').boundingBox();
-  const coach = screen(page).locator('.lesson-aside');
+  const coach = screen(page).locator('.coach-content');
   await coach.evaluate(element => { element.scrollTop = element.scrollHeight; });
   expect(await coach.evaluate(element => element.scrollTop)).toBeGreaterThan(0);
   const after = await screen(page).locator('.chess-board').boundingBox();

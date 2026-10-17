@@ -108,3 +108,107 @@
 @media (max-width: 650px) {
   .app-context-title h1 { font-size: 14px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 }
+
+/* Keep task actions in reach while explanations and answer choices can scroll. */
+.task-meter { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 8px; margin-bottom: 14px; }
+.task-meter .task-count { margin: 0; justify-self: start; }
+.task-total { color: #88937c; font-size: 12px; }
+.task-meter progress { grid-column: 1 / -1; display: block; appearance: none; border: 0; border-radius: 6px; overflow: hidden; height: 5px; width: 100%; background: #edf0e3; color: #688e61; }
+.task-meter progress::-webkit-progress-bar { background: #edf0e3; }
+.task-meter progress::-webkit-progress-value { background: #688e61; border-radius: 6px; transition: width .2s; }
+.task-meter progress::-moz-progress-bar { background: #688e61; }
+.practice-pane-switch, .fullscreen-control { display: none; }
+.practice-history { margin-top: 18px; }
+.restart-dialog { position: fixed; inset: 0; margin: auto; width: min(440px, calc(100% - 40px)); max-height: calc(100dvh - 40px); overflow: auto; padding: 28px; border: 1px solid #dfe5d1; border-radius: 22px; color: #385441; background: #fffef7; box-shadow: 0 20px 80px #273c3030; }
+.restart-dialog::backdrop { background: #23332b60; }
+.restart-illustration { display: inline-grid; place-items: center; width: 60px; height: 60px; border-radius: 18px; background: #e9efdf; margin-bottom: 18px; }
+.restart-dialog h2 { font-size: 23px; line-height: 1.5; }
+.restart-dialog p { font-size: 15px; line-height: 1.9; color: #7b896f; margin: 12px 0 24px; }
+.restart-dialog .button-row { display: flex; gap: 12px; }
+.restart-dialog .btn { flex: 1; min-height: 50px; }
+
+@media (any-pointer: coarse) and (min-width: 900px) and (orientation: landscape) {
+  .fullscreen-control { display: block; position: relative; }
+  .fullscreen-button { min-height: 48px; display: flex; align-items: center; gap: 7px; padding: 8px 12px; white-space: nowrap; border: 1px solid #dfe5d3; border-radius: 10px; background: #f8faf0; color: #537446; font-size: 13px; }
+  .fullscreen-message { position: absolute; right: 0; top: calc(100% + 12px); padding: 12px 16px; background: #fffef7; border: 1px solid #dfe5d3; box-shadow: 0 6px 22px #2e47331c; border-radius: 12px; width: 240px; font-size: 13px; line-height: 1.8; }
+  .home-page { height: 100%; display: flex; flex-direction: column; min-height: 0; padding: 12px 0; }
+  .home-page .hero { flex: 0 0 auto; margin: 0 0 16px; min-height: 0; height: 94px; border-radius: 16px; background: #e9efdc; }
+  .home-page .hero-copy { width: 100%; max-width: none; display: flex; align-items: center; justify-content: space-between; gap: 24px; padding: 18px 24px; }
+  .home-page .hero h1 { font-size: 24px; line-height: 1.6; margin: 0; }
+  .home-page .hero h1 br { display: none; }
+  .home-page .hero-copy > .eyebrow, .home-page .hero-copy > p, .home-page .hero-art, .home-page .hero:after { display: none; }
+  .home-page .hero-actions { flex-shrink: 0; flex-direction: row; margin: 0; gap: 18px; }
+  .home-page .hero-actions .btn { min-height: 52px; font-size: 15px; }
+  .home-page .hero-actions > span { display: none; }
+  .home-columns { flex: 1; min-height: 0; display: block; margin: 0; }
+  .home-page .home-aside, .home-page .practice-banner, .home-page .section-intro, .learning-map .section-heading .eyebrow { display: none; }
+  .learning-map { height: 100%; display: flex; flex-direction: column; min-height: 0; }
+  .learning-map > .section-heading { flex-shrink: 0; margin: 0 0 14px; min-height: 36px; }
+  .learning-map .section-heading h2 { font-size: 23px; }
+  .learning-map .count-label { font-size: 13px; }
+  .chapters { display: grid; flex: 1; min-height: 0; grid-template-columns: 240px minmax(0, 1fr); grid-template-rows: repeat(5, minmax(0, 1fr)); gap: 10px 20px; }
+  .chapter { display: contents; }
+  .chapter-toggle { grid-column: 1; transition: none; min-width: 0; min-height: 64px; padding: 12px; gap: 10px; border: 1px solid #e0e5d3; border-radius: 14px; background: #fefef7; }
+  .chapter.open .chapter-toggle { border-color: #a5b894; background: #eaf0df; box-shadow: inset 3px 0 #64825c; }
+  .chapter-toggle .chapter-icon { width: 36px; height: 36px; border-radius: 11px; flex-shrink: 0; font-size: 19px; }
+  .chapter-toggle .chapter-title { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; flex: 1; }
+  .chapter-toggle .chapter-title small { font-size: 11px; }
+  .chapter-toggle .chapter-title strong { font-size: 15px; line-height: 1.4; white-space: normal; }
+  .chapter-toggle .chapter-title > span, .chapter-toggle .expand-icon { display: none; }
+  .chapter-toggle .chapter-count { font-size: 11px; }
+  .chapter-toggle .chapter-done { font-size: 10px; gap: 2px; }
+  .chapter-toggle .chapter-done svg { display: none; }
+  .chapters .lesson-grid { grid-column: 2; grid-row: 1 / -1; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-content: start; gap: 14px; min-height: 0; overflow: auto; overscroll-behavior: contain; scrollbar-width: thin; padding: 4px 6px 16px 0; }
+  .chapters .lesson-card { min-height: 166px; padding: 18px; }
+  .chapters .lesson-card h3 { font-size: 18px; }
+  .chapters .lesson-card p { font-size: 13px; }
+  .chapters .card-bottom { font-size: 12px; }
+  .chapters .current-tag { font-size: 11px; }
+  .lesson-aside { overflow: hidden; padding: 0; }
+  .lesson-aside > .coach-card { display: flex; flex-direction: column; height: 100%; min-height: 0; flex: 1 1 auto; padding: 18px; }
+  .coach-card > .coach-top { flex-shrink: 0; margin: 0 0 12px; padding-bottom: 12px; }
+  .coach-content, .practice-content { min-height: 0; flex: 1; overflow: auto; scrollbar-width: thin; overscroll-behavior: contain; padding: 0 5px 0 0; scroll-padding: 8px; }
+  .coach-content h2 { margin: 0 0 12px; }
+  .coach-content .feedback { margin: 14px 0 8px; }
+  .coach-content .hint-box { margin: 12px 0 8px; }
+  .coach-actions, .practice-actions { flex: 0 0 auto; padding-top: 14px; margin-top: 12px; border-top: 1px solid #e4e8d9; background: #fefdf7; }
+  .coach-actions .btn, .coach-actions .text-btn, .practice-actions .btn { min-height: 52px; font-size: 15px; }
+  .coach-actions > .btn { width: 100%; }
+  .task-meter { flex: 0 0 auto; }
+  .task-meter .task-count { font-size: 13px; }
+  .practice-pane-switch { flex-shrink: 0; display: flex; gap: 4px; padding: 4px; background: #edf1e4; border-radius: 12px; margin-bottom: 16px; }
+  .practice-pane-switch button { flex: 1; min-height: 48px; display: flex; align-items: center; justify-content: center; gap: 7px; padding: 8px; border: 0; border-radius: 9px; font-size: 14px; color: #809071; background: transparent; }
+  .practice-pane-switch button[aria-pressed=true] { color: #3c6045; background: #fffef7; box-shadow: 0 2px 5px #4b643514; font-weight: 600; }
+  .practice-pane-switch button span { padding: 2px 6px; font-size: 11px; border-radius: 6px; background: #eaf0df; }
+  .practice-content[data-panel=assistant] .practice-history, .practice-content[data-panel=history] .practice-assistant { display: none; }
+  .practice-history { margin: 0; }
+  .practice-history .move-log { border: 0; background: transparent; padding: 0; }
+  .practice-history .move-log-list { max-height: none; font-size: 13px; }
+  .practice-history .move-log h3 { font-size: 15px; }
+  .practice-assistant .practice-message p { min-height: 0; }
+  .practice-actions .toggle-line { margin: 0 0 10px; min-height: 48px; }
+  .practice-actions .reset-game { margin: 8px auto 0; min-height: 44px; }
+}
+
+
+@media (any-pointer: coarse) and (min-width: 900px) and (orientation: landscape) {
+  .library-page { height: 100%; min-height: 0; display: flex; flex-direction: column; padding: 12px 0; }
+  .library-page > .page-title { flex-shrink: 0; padding: 0 0 12px; }
+  .library-page > .page-title .eyebrow { display: none; }
+  .library-page > .page-title h1 { margin: 0; font-size: 23px; }
+  .library-page > .page-title p { font-size: 13px; }
+  .library-page .piece-selector { flex-shrink: 0; display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 8px; margin: 0 0 12px; }
+  .library-page .piece-selector button { min-height: 56px; flex-direction: row; gap: 7px; padding: 8px 5px; }
+  .library-page .piece-selector button > span { width: 34px; height: 34px; font-size: 22px; }
+  .library-page .piece-selector strong { font-size: 12px; }
+  .library-layout { flex: 1; min-height: 0; grid-template-columns: minmax(0, 1.45fr) minmax(306px, 1fr); gap: 16px; align-items: stretch; }
+  .library-layout > .board-card { min-height: 0; height: 100%; padding: 8px; display: flex; align-items: center; container-type: size; }
+  .library-layout .chess-board { flex-shrink: 0; width: min(100%, calc((100cqh - 4px) * .904109589)); max-width: 650px; }
+  .library-layout .board-footnote { display: none; }
+  .library-layout .guide-detail { height: 100%; min-height: 0; display: flex; flex-direction: column; padding: 20px; border: 1px solid #e0e3d3; background: #fefdf7; border-radius: 17px; }
+  .guide-copy { flex: 1; min-height: 0; overflow: auto; scrollbar-width: thin; overscroll-behavior: contain; padding-right: 4px; }
+  .guide-copy h2 { font-size: 24px; line-height: 1.6; margin: 10px 0 14px; }
+  .guide-copy > p { font-size: 16px; line-height: 1.9; color: #748069; }
+  .guide-copy .guide-memory { margin: 20px 0; padding-top: 18px; }
+  .guide-detail > .btn { flex-shrink: 0; margin-top: 16px; min-height: 52px; font-size: 15px; }
+}

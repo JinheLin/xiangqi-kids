@@ -5,6 +5,7 @@ import { BoardSelection, ChessBoard } from './Board';
 import { HorseArt, Icon } from './Art';
 import { PlayFocusButton, usePlayFocus } from './PlayFocus';
 import { useSound } from './Sound';
+import { RestartDialog } from './RestartDialog';
 
 interface Frame { board: Board; turn: Side; lastMove: Move | null; captured?: Piece; text: string }
 const newGame = (): Frame[] => [{ board: initialBoard(), turn: 'red', lastMove: null, text: '新的一局，红方先走。' }];
@@ -24,6 +25,8 @@ export function Practice({ active = true }: { active?: boolean }) {
   const [hintTarget, setHintTarget] = useState<Point>();
   const [feedback, setFeedback] = useState('点一下红色棋子，就能看见它可以去的地方。');
   const [confirmReset, setConfirmReset] = useState(false);
+  const [panel, setPanel] = useState<'assistant' | 'history'>('assistant');
+  useEffect(() => { if (!active) setConfirmReset(false); }, [active]);
   const { focused, setFocused } = usePlayFocus(active);
   const { play } = useSound();
   const current = frames[frames.length - 1], { board, turn } = current;
@@ -52,12 +55,12 @@ export function Practice({ active = true }: { active?: boolean }) {
     if (finished || thinking) return;
     const piece = at(board, p);
     if (!selected || piece?.side === turn) {
-      if (piece?.side !== turn) { play('mistake'); setFeedback(`现在轮到${sideLabel(turn)}，先选一枚自己的棋子吧。`); return; }
+      if (piece?.side !== turn) { setPanel('assistant'); play('mistake'); setFeedback(`现在轮到${sideLabel(turn)}，先选一枚自己的棋子吧。`); return; }
       if (selected && samePoint(selected, p)) { setSelected(null); return; }
       play('select'); setSelected(p); setHintTarget(undefined); setFeedback(`选中了${pieceName(piece)}。${aids ? '小圆点是安全的空落点，圆圈是可以吃的棋子。' : '再点一下你想去的位置。'}`); return;
     }
     const move = { from: selected, to: p }, validation = validateMove(board, move, turn);
-    if (!validation.ok) { play('mistake'); setFeedback(validation.reason); return; }
+    if (!validation.ok) { setPanel('assistant'); play('mistake'); setFeedback(validation.reason); return; }
     playMove(board, move, turn);
     setFrames(old => advance(old, move)); setSelected(null); setHintTarget(undefined);
     setFeedback(isInCheck(applyMove(board, move), opposite(turn)) ? '将军！下一方必须先解除队长的危险。' : validation.reason);
@@ -77,14 +80,16 @@ export function Practice({ active = true }: { active?: boolean }) {
       <BoardSelection piece={selected ? at(board, selected) : undefined} onCancel={() => { setSelected(null); setHintTarget(undefined); }} message={finished ? '本次练习结束，可以悔棋或重新开始。' : thinking ? '小棋搭子正在思考，马上轮到你。' : '轻点自己的棋子，再点落点；选错可以取消。'} />
       <p className="board-footnote">先点棋子，再点落点<span>红方在下 · 黑方在上</span></p>
     </section><aside className="lesson-aside">
-      <section className="coach-card practice-coach"><div className="coach-top"><span className="coach-avatar"><HorseArt small /></span><div><strong>{mode === 'ai' ? '你的小棋搭子' : '一起下，更开心'}</strong><span>{mode === 'ai' ? '你执红棋，我来执黑棋' : '两位棋手轮流走棋'}</span></div></div>
+      <section className="coach-card practice-coach"><div className="practice-pane-switch" role="group" aria-label="练习面板"><button aria-pressed={panel === 'assistant'} onClick={() => setPanel('assistant')}><Icon name="hint" size={18} />练习助手</button><button aria-pressed={panel === 'history'} onClick={() => setPanel('history')}><Icon name="book" size={18} />走棋记录<span>{frames.length - 1}</span></button></div><div className="practice-content" data-panel={panel}><div className="practice-assistant"><div className="coach-top"><span className="coach-avatar"><HorseArt small /></span><div><strong>{mode === 'ai' ? '你的小棋搭子' : '一起下，更开心'}</strong><span>{mode === 'ai' ? '你执红棋，我来执黑棋' : '两位棋手轮流走棋'}</span></div></div>
         {finished ? <div className="game-result" role="status"><Icon name="trophy" size={32} /><h2>{outcome.winner ? `${sideLabel(outcome.winner)}获胜！` : '休息一下，换个思路'}</h2><p>{outcome.kind === 'checkmate' ? '将死：队长正被攻击，而且没有办法解除危险。' : outcome.kind === 'stalemate' ? '困毙：虽然没有被将军，但轮到的一方已经无棋可走，也会输。' : '同一个局面已出现三次，本次教学练习暂停。可以悔棋换个走法，或重新开局。'}</p></div> : <div className="practice-message" role="status" aria-live="polite"><h2>{thinking ? '让我想一想…' : '轮到你的小脑袋啦'}</h2><p>{feedback}</p></div>}
-        <label className="toggle-line"><span>显示合法走法</span><input type="checkbox" checked={aids} onChange={e => setAids(e.target.checked)} /><span className="toggle-visual" aria-hidden="true" /></label>
-        <div className="practice-tools"><button className="btn secondary" onClick={undo} disabled={frames.length < 2}><Icon name="undo" size={18} />悔棋</button><button className="btn secondary" disabled={finished || thinking} onClick={() => { play('hint'); const hint = choosePracticeMove(board, turn); if (hint) { setSelected(hint.from); setHintTarget(hint.to); setFeedback('可以试试这一步：把选中的棋子移到星星处。先观察，再决定。'); } }}><Icon name="hint" size={18} />想想怎么走</button></div>
-        {confirmReset ? <div className="reset-confirm"><p>要结束这一局，重新开始吗？</p><div className="button-row"><button className="btn primary" onClick={() => { setFrames(newGame()); setSelected(null); setHintTarget(undefined); setConfirmReset(false); setFeedback('新的一局开始啦，红方先走！'); }}>重新开局</button><button className="text-btn" onClick={() => setConfirmReset(false)}>接着下</button></div></div> : <button className="text-btn reset-game" onClick={() => { if (frames.length > 1) setConfirmReset(true); else { setFrames(newGame()); setFeedback('棋盘准备好啦，红方先走！'); } }}><Icon name="reset" size={17} />重新开始</button>}
+        </div><div className="practice-history">      <section className="move-log"><h3>这盘棋的小足迹 <span>{frames.length - 1} 步</span></h3><div className="move-log-list">{frames.length === 1 ? <p className="muted">第一步，从这里出发。</p> : frames.slice(1).map((frame, i) => <p key={i}><span>{i + 1}</span>{frame.text}</p>)}</div></section>
+      <details className="practice-rules"><summary>练习规则与小提醒</summary><p>支持全部基本走法、将军、应将、将死和困毙。不能把自己的帅置于危险中，也不能直接吃掉对方的将。</p><p>这是入门陪练，小棋搭子只思考两步。同一局面出现三次时暂停教学练习；不作正式比赛的长将、长捉或自然限着裁决。切换栏目后可以继续这盘棋；刷新页面会重新开局。课程星星会保存在本机。</p></details></div></div><div className="practice-actions"><label className="toggle-line"><span>显示合法走法</span><input type="checkbox" checked={aids} onChange={e => setAids(e.target.checked)} /><span className="toggle-visual" aria-hidden="true" /></label>
+        <div className="practice-tools"><button className="btn secondary" onClick={undo} disabled={frames.length < 2}><Icon name="undo" size={18} />悔棋</button><button className="btn secondary" disabled={finished || thinking} onClick={() => { setPanel('assistant'); play('hint'); const hint = choosePracticeMove(board, turn); if (hint) { setSelected(hint.from); setHintTarget(hint.to); setFeedback('可以试试这一步：把选中的棋子移到星星处。先观察，再决定。'); } }}><Icon name="hint" size={18} />想想怎么走</button></div>
+        <button className="text-btn reset-game" onClick={() => { if (frames.length > 1) setConfirmReset(true); else { setFrames(newGame()); setSelected(null); setHintTarget(undefined); setFeedback('棋盘准备好啦，红方先走！'); } }}><Icon name="reset" size={17} />重新开始</button>
+        </div>
+        <RestartDialog open={active && confirmReset} onCancel={() => setConfirmReset(false)} onRestart={() => { setFrames(newGame()); setSelected(null); setHintTarget(undefined); setConfirmReset(false); setPanel('assistant'); setFeedback('新的一局开始啦，红方先走！'); }} />
       </section>
-      <section className="move-log"><h3>这盘棋的小足迹 <span>{frames.length - 1} 步</span></h3><div className="move-log-list">{frames.length === 1 ? <p className="muted">第一步，从这里出发。</p> : frames.slice(1).map((frame, i) => <p key={i}><span>{i + 1}</span>{frame.text}</p>)}</div></section>
-      <details className="practice-rules"><summary>练习规则与小提醒</summary><p>支持全部基本走法、将军、应将、将死和困毙。不能把自己的帅置于危险中，也不能直接吃掉对方的将。</p><p>这是入门陪练，小棋搭子只思考两步。同一局面出现三次时暂停教学练习；不作正式比赛的长将、长捉或自然限着裁决。练习棋局在离开页面后重新开始，课程进度会保存在本机。</p></details>
+
     </aside></div>
   </main>;
 }

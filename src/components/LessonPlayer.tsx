@@ -7,6 +7,7 @@ import { BoardSelection, ChessBoard } from './Board';
 import { HorseArt, Icon, Stars } from './Art';
 import { PlayFocusButton, usePlayFocus } from './PlayFocus';
 import { useSound } from './Sound';
+import { isTabletWorkspace } from '../workspace';
 
 export function speak(text: string, enabled: boolean) {
   if (!enabled || !('speechSynthesis' in window)) return;
@@ -49,6 +50,14 @@ export function LessonPlayer({ lesson, voice, onComplete, navigate, active = tru
   }, [demo, step, play, active]);
   useEffect(() => { if (!active && demo) { setDemo(false); setBoard(step.board); setSelected(null); } }, [active, demo, step]);
   const page = useRef<HTMLElement>(null);
+  const coachContent = useRef<HTMLDivElement>(null);
+  useEffect(() => { if (coachContent.current) coachContent.current.scrollTop = 0; }, [step]);
+  useEffect(() => {
+    if (!active || !isTabletWorkspace()) return;
+    const content = coachContent.current;
+    const target = hints > 0 && !solved ? content?.querySelector('.hint-box') : content?.querySelector('.feedback');
+    if ((feedback || hints) && target) target.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+  }, [active, feedback, hints, solved]);
   const lastShownStep = useRef<typeof step | null>(null);
   useEffect(() => {
     if (!active || lastShownStep.current === step) return;
@@ -120,12 +129,12 @@ export function LessonPlayer({ lesson, voice, onComplete, navigate, active = tru
         <p className="board-footnote">{step.kind === 'identify' ? '找到棋子，轻轻点一下' : step.kind === 'quiz' ? '观察棋盘，在旁边选出答案' : '先点棋子，再点落点'}<span>支持方向键与回车操作</span></p>
       </section>
       <aside className="lesson-aside">
-        <section className="coach-card"><div className="coach-top"><span className="coach-avatar"><HorseArt small /></span><div><strong>小棋探陪你学</strong><span>一步一步来，慢慢就会啦</span></div></div><span className="task-count">小任务 {stepIndex + 1}</span><h2>{step.title}</h2><p className="instruction">{step.instruction}</p>
+        <section className="coach-card"><div className="coach-top"><span className="coach-avatar"><HorseArt small /></span><div><strong>小棋探陪你学</strong><span>一步一步来，慢慢就会啦</span></div></div><div className="task-meter"><span className="task-count">小任务 {stepIndex + 1}</span><span className="task-total">共 {lesson.steps.length} 个任务</span><progress aria-label="本课已完成任务" max={lesson.steps.length} value={finished ? lesson.steps.length : stepIndex + (solved ? 1 : 0)} /></div><div className="coach-content" ref={coachContent}><h2>{step.title}</h2><p className="instruction">{step.instruction}</p>
           {step.kind === 'quiz' && <div className="quiz-options">{step.options.map((option, i) => <button key={option} className={`quiz-option ${solved && i === step.answer ? 'correct' : wrongOption === i ? 'incorrect' : ''}`} disabled={solved} onClick={() => { if (i === step.answer) success(); else { setWrongOption(i); wrong('再想一想，答案就在小提示里。试试另一个答案吧！'); } }}><span>{String.fromCharCode(65 + i)}</span>{option}{solved && i === step.answer && <Icon name="check" size={18} />}</button>)}</div>}
           <div className={`feedback ${feedback?.kind || 'quiet'}`} role="status" aria-live="polite">{feedback ? <><Icon name={feedback.kind === 'success' ? 'check' : 'hint'} size={21} /><p>{feedback.text}</p></> : <><Icon name="hint" size={19} /><p>不用担心走错，每一次尝试都会有新发现。</p></>}</div>
           {hints > 0 && !solved && <div className="hint-box" role="status"><strong>小提示 {Math.min(hints, step.hints.length)}</strong><p>{step.hints[Math.min(hints, step.hints.length) - 1]}</p></div>}
-          {solved ? <button className="btn primary full" onClick={next}>{stepIndex === lesson.steps.length - 1 ? '完成课程，领取星星' : '下一个小任务'}<Icon name="arrow" /></button> : <div className="help-actions"><button className="btn secondary" disabled={demo || hints >= step.hints.length} onClick={() => { play('hint'); setHints(n => n + 1); setTotalHints(n => n + 1); }}><Icon name="hint" size={18} />{hints >= step.hints.length ? '提示都在这里啦' : '给我一点提示'}</button>{step.kind === 'move' && <button className="text-btn" disabled={demo} onClick={() => { play('hint'); setBoard(step.board); setSelected(step.from); setDemo(true); setTotalHints(n => n + 1); setFeedback({ kind: 'info', text: '看好啦！先选棋子，再走到星星处。演示后你来试一次。' }); }}><Icon name="play" size={17} />{demo ? '演示中…' : '看演示'}</button>}</div>}
-        </section>
+          </div><div className="coach-actions">{solved ? <button className="btn primary full" onClick={next}>{stepIndex === lesson.steps.length - 1 ? '完成课程，领取星星' : '下一个小任务'}<Icon name="arrow" /></button> : <div className="help-actions"><button className="btn secondary" disabled={demo || hints >= step.hints.length} onClick={() => { play('hint'); setHints(n => n + 1); setTotalHints(n => n + 1); }}><Icon name="hint" size={18} />{hints >= step.hints.length ? '提示都在这里啦' : '给我一点提示'}</button>{step.kind === 'move' && <button className="text-btn" disabled={demo} onClick={() => { play('hint'); setBoard(step.board); setSelected(step.from); setDemo(true); setTotalHints(n => n + 1); setFeedback({ kind: 'info', text: '看好啦！先选棋子，再走到星星处。演示后你来试一次。' }); }}><Icon name="play" size={17} />{demo ? '演示中…' : '看演示'}</button>}</div>}
+        </div></section>
         <div className="gentle-note"><Icon name="star" /><p>多想一会儿也没关系。<br /><strong>会思考的小脑袋，正在悄悄长大。</strong></p></div>
       </aside>
     </div>
