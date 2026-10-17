@@ -1,0 +1,132 @@
+.guide-voice-tools { display: flex; gap: 8px 12px; flex-wrap: wrap; align-items: center; margin: 16px 0 4px; }
+.guide-voice-toggle { display: inline-flex; gap: 7px; align-items: center; justify-content: center; min-height: 44px; padding: 8px 12px; border-radius: 10px; border: 1px solid #dce4d0; background: #f5f7ed; color: #687b58; font-size: 13px; }
+.guide-voice-toggle.on { background: #e9f0de; color: #385e42; }
+.guide-voice-tools .text-btn { font-size: 12px; padding: 8px; min-height: 44px; }
+.speech-status { padding: 10px 12px; margin-top: 12px; border-radius: 10px; background: #fff1dc; color: #8d6744; font-size: 13px; line-height: 1.8; }
+.guided-intro { padding-bottom: 30px; }
+.guided-intro .page-title > .horse-art { width: 112px; height: 112px; }
+.guide-welcome { background: #fffef7; border: 1px solid #e0e5d3; padding: 30px; border-radius: 22px; }
+.guide-welcome h2 { font-size: 23px; margin-bottom: 22px; }
+.guide-goals { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; }
+.guide-goals > button { text-align: left; display: flex; flex-direction: column; align-items: flex-start; padding: 22px; min-height: 194px; gap: 13px; border: 1px solid #e0e6d3; background: #f8f9f0; border-radius: 16px; color: #718268; }
+.guide-goals > button.chosen { background: #eaf0df; border-color: #88a076; box-shadow: inset 0 0 0 1px #88a076; }
+.guide-goals > button > span { display: grid; place-items: center; width: 46px; height: 46px; border-radius: 14px; background: #e2e9d5; color: #55744e; }
+.guide-goals strong { font-size: 20px; color: #3c5a43; }
+.guide-goals p { font-size: 14px; line-height: 1.9; }
+.guide-welcome-bottom { display: flex; align-items: center; justify-content: space-between; gap: 24px; padding-top: 24px; margin-top: 24px; border-top: 1px solid #e4e9d8; }
+.guide-welcome-bottom strong { font-size: 17px; color: #426048; }
+.guide-welcome-bottom p { margin-top: 8px; font-size: 13px; color: #7c8c70; line-height: 1.8; }
+.guide-welcome-bottom > .btn { flex-shrink: 0; min-height: 54px; }
+.guide-save-note { font-size: 12px; color: #89977d; line-height: 1.9; margin-top: 20px; }
+.guided-coach .feedback { margin: 14px 0; }
+.guided-coach .feedback.warning { background: #fff0db; color: #96633d; border-color: #e8cb99; }
+.guide-goal-status { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 12px; border-radius: 12px; background: #edf1e3; margin-bottom: 16px; flex-shrink: 0; color: #6e815d; font-size: 13px; }
+.guide-goal-status > span:first-child { display: inline-flex; align-items: center; gap: 7px; }
+.guide-goal-status.earned { background: #f7edcf; color: #957132; }
+.guide-goal-celebration { color: #977441; padding: 12px; border-radius: 10px; background: #fff4d8; font-size: 13px; line-height: 1.8; margin-top: 16px; }
+.guide-hint-level { font-size: 12px; color: #82956f; margin-top: 16px; }
+.guide-actions { display: flex; flex-wrap: wrap; gap: 10px; }
+.guide-actions .btn { flex: 1; min-width: 86px; font-size: 13px; padding: 12px 10px; }
+.guide-end { white-space: nowrap; }
+.guide-new { align-self: center; }
+.guide-review-summary { display: flex; align-items: center; gap: 18px; padding: 22px; background: #edf2e3; border-radius: 16px; margin-bottom: 24px; color: #5d7a53; }
+.guide-review-summary.earned { background: #f9efcf; color: #96712e; }
+.guide-review-summary h2 { font-size: 21px; }
+.guide-review-summary p { font-size: 14px; margin-top: 10px; line-height: 1.8; }
+.guide-review-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; }
+.guide-review-card { display: flex; flex-direction: column; align-items: flex-start; gap: 16px; border: 1px solid #dfe5d1; border-radius: 18px; padding: 24px; background: #fffef7; }
+.guide-review-card h2 { font-size: 20px; }
+.guide-review-card .chess-board { max-width: 265px; }
+.guide-review-card p { font-size: 14px; line-height: 1.9; color: #78866c; }
+.guide-review-card .review-move { font-size: 12px; }
+.guide-review-card .btn { margin-top: auto; }
+.guide-review-card .guide-empty-review { padding: 30px 0; }
+.guide-review-actions { margin: 24px 0; }
+.guided-growth { border: 1px solid #e0e6d3; border-radius: 18px; background: #fbfcf2; padding: 24px; margin-top: 32px; }
+.guided-growth h2 { font-size: 22px; margin: 8px 0 12px; }
+.guided-growth p { font-size: 13px; color: #819172; line-height: 1.8; }
+.guided-growth-badges { display: flex; flex-wrap: wrap; gap: 12px; margin: 20px 0; }
+.guided-growth-badges > span { display: inline-flex; align-items: center; gap: 8px; border-radius: 10px; padding: 12px; background: #eff2e7; color: #9aa18d; font-size: 13px; }
+.guided-growth-badges > span.earned { color: #94702d; background: #f8edcf; }
+@media (any-pointer: coarse), (max-width: 900px) {
+  .header-inner .app-nav { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+  .header-inner .app-nav button { font-size: 11px; }
+  .guide-voice-toggle, .guide-voice-tools .text-btn, .guide-actions .btn, .guide-end { min-height: 48px; }
+}
+@media (any-pointer: coarse) and (min-width: 900px) and (orientation: landscape) {
+  .guided-intro > .page-title { padding: 18px 0; }
+  .guided-intro > .page-title h1 { font-size: 26px; }
+  .guided-intro > .page-title p { font-size: 14px; }
+  .guided-intro > .page-title > .horse-art { width: 80px; height: 80px; }
+  .guide-welcome { padding: 24px; }
+  .guide-goals > button { min-height: 170px; padding: 18px; }
+  .guide-welcome-bottom { margin-top: 18px; padding-top: 18px; }
+  .guided-coach { height: auto !important; }
+  .guided-coach .coach-top { padding-bottom: 12px; }
+  .guide-goal-status { padding: 10px; margin-bottom: 12px; }
+  .guided-coach .coach-content { flex: 1; }
+  .guide-actions { flex-shrink: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+  .guide-actions .btn { min-width: 0; width: auto; min-height: 52px; font-size: 14px; padding: 10px 6px; gap: 6px; }
+  .guide-actions:has(> .btn:nth-child(2):last-child) { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .guide-actions .btn:last-child:nth-child(4) { grid-column: 1 / -1; }
+  .guide-new { min-height: 40px; padding: 4px 12px; }
+  .guided-page .guide-voice-tools { gap: 4px 8px; }
+  .guided-page .guide-voice-tools .text-btn { font-size: 12px; padding: 6px; }
+}
+@media (max-width: 650px) {
+  .guided-intro .page-title { flex-direction: row; align-items: center; gap: 8px; }
+  .guided-intro .page-title > .horse-art { width: 65px; height: 65px; flex-shrink: 0; }
+  .guided-intro .page-title p { font-size: 13px; }
+  .guide-welcome { padding: 18px; }
+  .guide-welcome h2 { font-size: 20px; }
+  .guide-goals { grid-template-columns: 1fr; gap: 12px; }
+  .guide-goals > button { min-height: 0; padding: 16px; gap: 10px; display: grid; grid-template-columns: 40px 1fr; align-items: center; }
+  .guide-goals > button > span { width: 40px; height: 40px; grid-row: 1 / 3; }
+  .guide-goals strong { font-size: 17px; }
+  .guide-goals p { font-size: 13px; grid-column: 2; }
+  .guide-welcome-bottom { flex-direction: column; align-items: stretch; margin-top: 18px; padding-top: 18px; }
+  .guide-welcome-bottom > .btn { justify-content: center; }
+  .guided-page .practice-heading-actions { justify-content: space-between; flex-wrap: wrap; }
+  .guide-review-grid { grid-template-columns: 1fr; gap: 16px; }
+  .guide-review-card { padding: 18px; }
+  .guide-review-summary { padding: 18px; align-items: flex-start; gap: 12px; }
+  .guide-review-summary > svg { flex-shrink: 0; width: 28px; }
+  .guide-review-summary h2 { font-size: 18px; }
+  .guide-review-summary p { font-size: 13px; }
+  .guided-growth { padding: 18px; }
+  .guide-review-actions { flex-wrap: wrap; }
+}
+
+.guide-board-meta { display: flex; align-items: center; justify-content: flex-end; flex-wrap: wrap; gap: 4px 10px; }
+.guided-board .target-star.with-piece { inset: auto; top: -2px; right: -2px; width: 22px; height: 22px; z-index: 5; border: 1px solid #c18e33; border-radius: 50%; background: #fff6d9; color: #b38127; font-size: 19px; line-height: 1; animation: none; pointer-events: none; }
+
+.guide-review-card .piece { font-size: 16px; border-width: 1px; box-shadow: 0 1px 0 #bc9c64, 0 2px 3px #65512b25; }
+.guide-review-card .piece:before { inset: 1px; border-width: 1px; }
+
+.guide-review-card-content { width: 100%; }
+.guide-review-card-content > p { margin-top: 16px; }
+@media (any-pointer: coarse) and (min-width: 900px) and (orientation: landscape) {
+  .guided-review { display: flex; flex-direction: column; height: 100%; min-height: 0; padding: 14px 0; }
+  .guided-review > .page-title { padding: 0 0 12px; flex-shrink: 0; }
+  .guided-review > .page-title .eyebrow { display: none; }
+  .guided-review > .page-title h1 { font-size: 24px; margin: 0 0 6px; }
+  .guided-review > .page-title p { font-size: 13px; }
+  .guide-review-summary { flex-shrink: 0; padding: 14px 18px; margin-bottom: 14px; }
+  .guide-review-summary h2 { font-size: 18px; }
+  .guide-review-summary p { margin-top: 6px; font-size: 12px; }
+  .guide-review-grid { flex: 1; min-height: 0; gap: 16px; }
+  .guide-review-card { min-height: 0; padding: 16px; gap: 12px; }
+  .guide-review-card h2 { flex-shrink: 0; font-size: 17px; }
+  .guide-review-card-content { flex: 1; min-height: 0; overflow: auto; scrollbar-width: thin; overscroll-behavior: contain; }
+  .guide-review-card .chess-board { max-width: 180px; }
+  .guide-review-card .piece { font-size: 12px; }
+  .guide-review-card > .btn { flex-shrink: 0; min-height: 48px; width: 100%; }
+  .guide-review-footer { flex-shrink: 0; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px 20px; margin-top: 12px; }
+  .guide-review-footer .guide-voice-tools { margin: 0; }
+  .guide-review-footer .guide-review-actions { margin: 0; gap: 10px; }
+  .guide-review-footer .speech-status { width: 100%; order: 3; margin: 0; }
+}
+
+.guide-previous-choice { border-left: 3px solid #bdcda9; margin: 14px 0; padding: 8px 12px; background: #f6f8ee; border-radius: 0 9px 9px 0; }
+.guide-previous-choice strong { font-size: 12px; color: #7a8c69; }
+.guide-previous-choice p { margin-top: 6px; font-size: 13px; line-height: 1.8; color: #849376; }

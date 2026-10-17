@@ -1,21 +1,24 @@
-import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import { chapters, lessons, makePiece, pieceGuides } from './data/curriculum';
 import type { Lesson } from './data/curriculum';
-import { awardLesson, emptyProgress, firstUnfinished, isUnlocked, parseProgress, starTotal, STORAGE_KEY } from './progress';
+import { awardGuided, awardLesson, emptyProgress, firstUnfinished, isUnlocked, parseProgress, starTotal, STORAGE_KEY } from './progress';
 import type { Progress } from './progress';
 import { FullscreenButton } from './components/FullscreenButton';
 import { isTabletWorkspace } from './workspace';
 import { HorseArt, Icon, ProgressRing, Stars } from './components/Art';
 import { LessonPlayer } from './components/LessonPlayer';
 import { Practice } from './components/Practice';
+import { GuidedGame } from './components/GuidedGame';
+import { guideGoals } from './guided/coach';
+import type { GoalId } from './guided/coach';
 import { SoundProvider, SoundToggle } from './components/Sound';
 import { ChessBoard } from './components/Board';
 import { legalMoves } from './engine/xiangqi';
 import type { Board, PieceType } from './engine/xiangqi';
 
 type Navigate = (route: string) => void;
-const navItems = [{ route: '/learn', title: '学习地图', icon: 'book' }, { route: '/practice', title: '自由练习', icon: 'flag' }, { route: '/pieces', title: '棋子图鉴', icon: 'grid' }, { route: '/progress', title: '我的成长', icon: 'trophy' }];
+const navItems = [{ route: '/learn', title: '学习地图', icon: 'book' }, { route: '/guided', title: '下指导棋', icon: 'hint' }, { route: '/practice', title: '自由练习', icon: 'flag' }, { route: '/pieces', title: '棋子图鉴', icon: 'grid' }, { route: '/progress', title: '我的成长', icon: 'trophy' }];
 const readRoute = () => window.location.hash.slice(1) || '/learn';
 function readInitial() {
   try { return { progress: parseProgress(localStorage.getItem(STORAGE_KEY)), available: true }; }
@@ -53,7 +56,7 @@ function LearningMap({ progress, navigate }: { progress: Progress; navigate: Nav
       <section className="tip-card"><span className="tip-illustration">✧</span><span className="eyebrow">小棋探悄悄说</span><h3>下棋前，先看一看</h3><p>这颗棋子能怎么走？<br />我的帅，安全吗？<br />想清楚，再出发。</p><span className="tip-leaf" aria-hidden="true">♧</span></section>
       <div className="local-note"><Icon name="check" size={17} /><p>不用注册，随时开始<br /><span>学习进度自动保存在这台设备</span></p></div>
     </aside></div>
-    <section className="practice-banner"><div className="practice-banner-icon"><Icon name="flag" size={30} /></div><div><h3>想先和棋子们玩一玩？</h3><p>在自由练习场大胆尝试，走错了也有小提示。</p></div><button className="btn secondary" onClick={() => navigate('/practice')}>去练习场<Icon name="arrow" size={18} /></button></section>
+    <section className="practice-banner"><div className="practice-banner-icon"><Icon name="flag" size={30} /></div><div><h3>想先和棋子们玩一玩？</h3><p>在自由练习场大胆尝试，走错了也有小提示。</p></div><button className="btn secondary" onClick={() => navigate('/guided')}>下指导棋<Icon name="hint" size={18} /></button><button className="btn secondary" onClick={() => navigate('/practice')}>去练习场<Icon name="arrow" size={18} /></button></section>
   </main>;
 }
 
@@ -74,7 +77,7 @@ function Growth({ progress, onReset, navigate }: { progress: Progress; onReset: 
   return <main className="page-width growth-page"><div className="page-title"><div><span className="eyebrow">每一个小脚印，都值得被看见</span><h1>我的成长花园</h1><p>星星和徽章，记录着你学会的每一个新本领。</p></div></div><section className="growth-summary"><HorseArt /><div><span className="eyebrow">{completed === lessons.length ? '小小象棋手' : completed >= 3 ? '努力探索的小棋探' : '你好，象棋新朋友'}</span><h2>{completed === lessons.length ? '冒险才刚刚开始！' : '一点点进步，也很了不起。'}</h2><p>已完成 {completed} 节课程，收集 {starTotal(progress)} 颗星星。</p><button className="btn primary" onClick={() => navigate(`/lesson/${firstUnfinished(progress).id}`)}>继续探索<Icon name="arrow" /></button></div><ProgressRing percent={Math.round(completed / lessons.length * 100)} /></section><div className="section-heading"><h2>我的本领徽章</h2><span className="count-label">完成一章，解锁一枚</span></div><div className="badge-grid">{chapters.map((chapter, i) => {
     const list = lessons.filter(l => l.chapter === i), count = list.filter(l => progress.completed[l.id]).length, earned = count === list.length;
     return <div className={`badge-card ${earned ? 'earned' : ''}`} key={i}><div className={`badge-medal ${chapter.color}`}><Icon name={earned ? 'trophy' : 'lock'} size={32} /></div><h3>{chapter.badge}</h3><p>{chapter.title}</p><span>{earned ? '已获得 · 做得真棒' : `${count} / ${list.length} 课`}</span></div>;
-  })}</div><section className="review-section"><h2>我的课程足迹</h2>{completed ? <div className="review-grid">{lessons.filter(l => progress.completed[l.id]).map(l => <button key={l.id} className="review-item" onClick={() => navigate(`/lesson/${l.id}`)}><span className="review-token">{l.token}</span><strong>{l.title}</strong><Stars count={progress.completed[l.id]} /><Icon name="arrow" size={17} /></button>)}</div> : <div className="empty-state"><Icon name="flag" size={32} /><p>第一堂课正在等你。<br />完成后，这里就会留下你的星星足迹。</p><button className="btn secondary" onClick={() => navigate(`/lesson/${lessons[0].id}`)}>出发吧<Icon name="arrow" size={17} /></button></div>}</section><section className="save-info"><div><h3>关于学习进度</h3><p>进度保存在当前浏览器中，不需要账号。更换浏览器、设备或清除网站数据后，进度不会同步。</p></div>{confirm ? <div className="reset-confirm"><p>确定清空这台设备上的全部课程星星和徽章？</p><div className="button-row"><button className="btn danger" onClick={() => { onReset(); setConfirm(false); }}>确定清空进度</button><button className="btn secondary" onClick={() => setConfirm(false)}>保留进度</button></div></div> : <button className="text-btn" onClick={() => setConfirm(true)}>重新开始学习</button>}</section></main>;
+  })}</div><section className="guided-growth"><div><span className="eyebrow">边下边学的新本领</span><h2>我的指导棋徽章</h2><p>一盘中最多完成 {progress.guided.bestSafeMoves} 步安全观察。提示和悔棋不扣奖励。</p></div><div className="guided-growth-badges">{guideGoals.map(goal => <span key={goal.id} className={progress.guided.badges.includes(goal.id) ? 'earned' : ''}><Icon name={progress.guided.badges.includes(goal.id) ? 'trophy' : 'lock'} size={18} />{goal.title}{progress.guided.badges.includes(goal.id) ? ' · 已获得' : ''}</span>)}</div><button className="btn secondary" onClick={() => navigate('/guided')}>去下指导棋<Icon name="arrow" size={18} /></button></section><section className="review-section"><h2>我的课程足迹</h2>{completed ? <div className="review-grid">{lessons.filter(l => progress.completed[l.id]).map(l => <button key={l.id} className="review-item" onClick={() => navigate(`/lesson/${l.id}`)}><span className="review-token">{l.token}</span><strong>{l.title}</strong><Stars count={progress.completed[l.id]} /><Icon name="arrow" size={17} /></button>)}</div> : <div className="empty-state"><Icon name="flag" size={32} /><p>第一堂课正在等你。<br />完成后，这里就会留下你的星星足迹。</p><button className="btn secondary" onClick={() => navigate(`/lesson/${lessons[0].id}`)}>出发吧<Icon name="arrow" size={17} /></button></div>}</section><section className="save-info"><div><h3>关于学习进度</h3><p>进度保存在当前浏览器中，不需要账号。更换浏览器、设备或清除网站数据后，进度不会同步。</p></div>{confirm ? <div className="reset-confirm"><p>确定清空这台设备上的全部课程星星和徽章？</p><div className="button-row"><button className="btn danger" onClick={() => { onReset(); setConfirm(false); }}>确定清空进度</button><button className="btn secondary" onClick={() => setConfirm(false)}>保留进度</button></div></div> : <button className="text-btn" onClick={() => setConfirm(true)}>重新开始学习</button>}</section></main>;
 }
 
 /** Keep visited screens and their scroll positions while moving around the app. */
@@ -93,6 +96,7 @@ function AppView({ name, active, children }: { name: string; active: boolean; ch
 export default function App() {
   const [initial] = useState(readInitial);
   const [progress, setProgress] = useState(initial.progress);
+  const [guideRevision, setGuideRevision] = useState(0);
   const [storageError, setStorageError] = useState(!initial.available);
   const [route, setRoute] = useState(readRoute);
   useEffect(() => {
@@ -118,13 +122,15 @@ export default function App() {
     if (!lesson) setVisited(old => old.has(primaryRoute) ? old : new Set([...old, primaryRoute]));
     if (isLesson) setCachedLesson(lesson);
   }, [primaryRoute, isLesson, lesson]);
+  const awardGuide = useCallback((goal: GoalId, safe: number, completed: boolean) => setProgress(old => awardGuided(old, goal, safe, completed)), []);
   const screenTitle = lesson?.title || navItems.find(item => item.route === primaryRoute)!.title;
   const nav = <nav className="app-nav" aria-label="主要导航">{navItems.map(item => <button key={item.route} className={primaryRoute === item.route ? 'active' : ''} aria-current={primaryRoute === item.route ? 'page' : undefined} onClick={() => navigate(item.route)}><Icon name={item.icon} size={20} /><span>{item.title}</span></button>)}</nav>;
   const content = <>
     {(visited.has('/learn') || (!lesson && primaryRoute === '/learn')) && <AppView name="/learn" active={!lesson && primaryRoute === '/learn'}><LearningMap progress={progress} navigate={navigate} /></AppView>}
+    {(visited.has('/guided') || route === '/guided') && <AppView name="/guided" active={route === '/guided'}><GuidedGame key={guideRevision} active={route === '/guided'} voice={progress.voice} onVoiceChange={voice => setProgress(old => ({ ...old, voice }))} onAward={awardGuide} /></AppView>}
     {(visited.has('/practice') || route === '/practice') && <AppView name="/practice" active={route === '/practice'}><Practice active={route === '/practice'} /></AppView>}
     {(visited.has('/pieces') || route === '/pieces') && <AppView name="/pieces" active={route === '/pieces'}><PieceLibrary progress={progress} navigate={navigate} /></AppView>}
-    {(visited.has('/progress') || route === '/progress') && <AppView name="/progress" active={route === '/progress'}><Growth progress={progress} onReset={() => { setProgress(emptyProgress()); setCachedLesson(undefined); }} navigate={navigate} /></AppView>}
+    {(visited.has('/progress') || route === '/progress') && <AppView name="/progress" active={route === '/progress'}><Growth progress={progress} onReset={() => { setProgress(emptyProgress()); setCachedLesson(undefined); setGuideRevision(value => value + 1); }} navigate={navigate} /></AppView>}
     {currentLesson && <AppView key={currentLesson.id} name="lesson" active={isLesson}><LessonPlayer active={isLesson} lesson={currentLesson} voice={progress.voice} onComplete={(id, stars) => { setProgress(old => awardLesson(old, id, stars)); setCachedLesson(undefined); }} navigate={navigate} /></AppView>}
     {lesson && !allowed && <AppView name="locked" active><main className="page-width empty-state locked-page"><Icon name="lock" size={40} /><h1>先把前面的本领学会吧</h1><p>完成前一课，这一课就会解锁。</p><button className="btn primary" onClick={() => navigate('/learn')}>回到学习地图<Icon name="arrow" /></button></main></AppView>}
   </>;

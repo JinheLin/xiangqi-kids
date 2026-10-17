@@ -140,12 +140,12 @@ export function positionKey(board: Board, turn: Side): string {
   return turn + ':' + board.map(p => `${p.side[0]}${p.type}@${p.x},${p.y}`).sort().join(';');
 }
 
-const values: Record<PieceType, number> = { general: 10000, rook: 900, cannon: 450, horse: 420, elephant: 200, advisor: 200, pawn: 100 };
+export const pieceValues: Record<PieceType, number> = { general: 10000, rook: 900, cannon: 450, horse: 420, elephant: 200, advisor: 200, pawn: 100 };
 function evaluate(board: Board, side: Side): number {
   return board.reduce((score, p) => {
     const advance = p.side === 'red' ? 9 - p.y : p.y;
     const development = p.type === 'pawn' ? advance * 8 + (crossedRiver(p) ? 50 : 0) : p.type === 'horse' ? advance * 3 + (4 - Math.abs(4 - p.x)) * 3 : 0;
-    return score + (p.side === side ? 1 : -1) * (values[p.type] + development);
+    return score + (p.side === side ? 1 : -1) * (pieceValues[p.type] + development);
   }, 0);
 }
 

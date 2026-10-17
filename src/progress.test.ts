@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { awardLesson, emptyProgress, firstUnfinished, isUnlocked, parseProgress, starTotal } from './progress';
+import { awardGuided, awardLesson, emptyProgress, firstUnfinished, isUnlocked, parseProgress, starTotal } from './progress';
 import { lessons } from './data/curriculum';
 
 describe('durable progress', () => {
@@ -27,5 +27,19 @@ describe('durable progress', () => {
     expect(progress.completed).toEqual({ 'hello-board': 3 }); expect(progress.sound).toBe(true); expect(progress.voice).toBe(true);
     const muted = parseProgress(JSON.stringify({ ...progress, sound: false }));
     expect(muted.sound).toBe(false); expect(muted.voice).toBe(true); expect(starTotal(muted)).toBe(3);
+  });
+});
+
+describe('guided rewards', () => {
+  it('migrates old saves and filters unknown or duplicate badges', () => {
+    expect(parseProgress(JSON.stringify({ version: 1, completed: {} })).guided).toEqual({ bestSafeMoves: 0, badges: [] });
+    const parsed = parseProgress(JSON.stringify({ version: 1, completed: { 'hello-board': 3 }, guided: { bestSafeMoves: -2, badges: ['capture', 'fake', 'capture'] } }));
+    expect(parsed.guided).toEqual({ bestSafeMoves: 0, badges: ['capture'] }); expect(starTotal(parsed)).toBe(3);
+  });
+  it('retries and hints cannot duplicate badges or reduce the best record', () => {
+    const first = awardGuided(emptyProgress(), 'safe', 5, true);
+    expect(awardGuided(first, 'safe', 2, true)).toBe(first);
+    expect(parseProgress(JSON.stringify(first))).toEqual(first);
+    expect(starTotal(first)).toBe(0);
   });
 });
