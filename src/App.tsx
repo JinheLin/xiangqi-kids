@@ -12,6 +12,7 @@ import { Practice } from './components/Practice';
 import { GuidedGame } from './components/GuidedGame';
 import { guideGoals } from './guided/coach';
 import type { GoalId } from './guided/coach';
+import type { Difficulty } from './engine/difficulty';
 import { SoundProvider, SoundToggle } from './components/Sound';
 import { ChessBoard } from './components/Board';
 import { legalMoves } from './engine/xiangqi';
@@ -123,12 +124,13 @@ export default function App() {
     if (isLesson) setCachedLesson(lesson);
   }, [primaryRoute, isLesson, lesson]);
   const awardGuide = useCallback((goal: GoalId, safe: number, completed: boolean) => setProgress(old => awardGuided(old, goal, safe, completed)), []);
+  const changeDifficulty = useCallback((difficulty: Difficulty) => setProgress(old => ({ ...old, difficulty })), []);
   const screenTitle = lesson?.title || navItems.find(item => item.route === primaryRoute)!.title;
   const nav = <nav className="app-nav" aria-label="主要导航">{navItems.map(item => <button key={item.route} className={primaryRoute === item.route ? 'active' : ''} aria-current={primaryRoute === item.route ? 'page' : undefined} onClick={() => navigate(item.route)}><Icon name={item.icon} size={20} /><span>{item.title}</span></button>)}</nav>;
   const content = <>
     {(visited.has('/learn') || (!lesson && primaryRoute === '/learn')) && <AppView name="/learn" active={!lesson && primaryRoute === '/learn'}><LearningMap progress={progress} navigate={navigate} /></AppView>}
-    {(visited.has('/guided') || route === '/guided') && <AppView name="/guided" active={route === '/guided'}><GuidedGame key={guideRevision} active={route === '/guided'} voice={progress.voice} onVoiceChange={voice => setProgress(old => ({ ...old, voice }))} onAward={awardGuide} /></AppView>}
-    {(visited.has('/practice') || route === '/practice') && <AppView name="/practice" active={route === '/practice'}><Practice active={route === '/practice'} /></AppView>}
+    {(visited.has('/guided') || route === '/guided') && <AppView name="/guided" active={route === '/guided'}><GuidedGame key={guideRevision} active={route === '/guided'} voice={progress.voice} onVoiceChange={voice => setProgress(old => ({ ...old, voice }))} onAward={awardGuide} difficulty={progress.difficulty} onDifficultyChange={changeDifficulty} /></AppView>}
+    {(visited.has('/practice') || route === '/practice') && <AppView name="/practice" active={route === '/practice'}><Practice active={route === '/practice'} difficulty={progress.difficulty} onDifficultyChange={changeDifficulty} /></AppView>}
     {(visited.has('/pieces') || route === '/pieces') && <AppView name="/pieces" active={route === '/pieces'}><PieceLibrary progress={progress} navigate={navigate} /></AppView>}
     {(visited.has('/progress') || route === '/progress') && <AppView name="/progress" active={route === '/progress'}><Growth progress={progress} onReset={() => { setProgress(emptyProgress()); setCachedLesson(undefined); setGuideRevision(value => value + 1); }} navigate={navigate} /></AppView>}
     {currentLesson && <AppView key={currentLesson.id} name="lesson" active={isLesson}><LessonPlayer active={isLesson} lesson={currentLesson} voice={progress.voice} onComplete={(id, stars) => { setProgress(old => awardLesson(old, id, stars)); setCachedLesson(undefined); }} navigate={navigate} /></AppView>}

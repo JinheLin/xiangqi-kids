@@ -5,5 +5,6 @@ import './styles.css';
 import './touch.css';
 import './app-shell.css';
 import './guided.css';
+import './difficulty.css';
 
 createRoot(document.getElementById('root')!).render(<StrictMode><App /></StrictMode>);

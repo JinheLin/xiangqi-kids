@@ -31,6 +31,11 @@ describe('durable progress', () => {
 });
 
 describe('guided rewards', () => {
+  it('keeps difficulty and migrates older or unknown settings to the entry level', () => {
+    expect(parseProgress(JSON.stringify({ version: 1, completed: {} })).difficulty).toBe('easy');
+    expect(parseProgress(JSON.stringify({ ...emptyProgress(), difficulty: 'unknown' })).difficulty).toBe('easy');
+    expect(parseProgress(JSON.stringify({ ...emptyProgress(), difficulty: 'hard' })).difficulty).toBe('hard');
+  });
   it('migrates old saves and filters unknown or duplicate badges', () => {
     expect(parseProgress(JSON.stringify({ version: 1, completed: {} })).guided).toEqual({ bestSafeMoves: 0, badges: [] });
     const parsed = parseProgress(JSON.stringify({ version: 1, completed: { 'hello-board': 3 }, guided: { bestSafeMoves: -2, badges: ['capture', 'fake', 'capture'] } }));
