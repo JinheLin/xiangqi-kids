@@ -49,7 +49,7 @@ jobs:
 
   interaction:
     name: Check desktop, phone and OPPO Pad3 (shard ${{ matrix.shard }}/3)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 10
     strategy:
       fail-fast: false
@@ -57,6 +57,7 @@ jobs:
         shard: [1, 2, 3]
     env:
       BASE_PATH: /
+      PLAYWRIGHT_CHANNEL: chrome
     steps:
       - name: Check out source
         uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
@@ -67,8 +68,8 @@ jobs:
           cache: npm
       - name: Install locked dependencies
         run: npm ci --no-audit --no-fund
-      - name: Install test browser
-        run: npx playwright install --with-deps chromium
+      - name: Verify preinstalled Chrome
+        run: google-chrome --version
       - name: Verify responsive layouts and real touch gestures
         run: npm run test:e2e -- --shard=${{ matrix.shard }}/3
 
