@@ -6,8 +6,8 @@ interface Probe { contexts: number; starts: number; maxRMS: number; states: stri
 const probe = (page: Page) => page.evaluate(() => (window as unknown as Window & { __soundProbe: Probe }).__soundProbe);
 const press = (control: Locator, touch: boolean) => touch ? control.tap() : control.click();
 
-async function observeNativeAudio(page: Page) {
-  await page.addInitScript(() => {
+async function observeNativeAudio(page: Page, sampleDelay = 0) {
+  await page.addInitScript(sampleDelay => {
     const state: Probe = { contexts: 0, starts: 0, maxRMS: 0, states: [] };
     (window as unknown as Window & { __soundProbe: Probe }).__soundProbe = state;
     const Original = window.AudioContext;
@@ -22,22 +22,23 @@ async function observeNativeAudio(page: Page) {
     Object.defineProperty(AudioNode.prototype, 'connect', { configurable: true, value: function(this: AudioNode, ...args: unknown[]) {
       const result = Reflect.apply(connect, this, args);
       if (args[0] instanceof AudioDestinationNode) {
-        const analyser = this.context.createAnalyser(); analyser.fftSize = 256;
+        // Keep ~0.7 s of real PCM so a delayed UI frame still sees short notes.
+        const analyser = this.context.createAnalyser(); analyser.fftSize = 32768;
         Reflect.apply(connect, this, [analyser]);
-        const samples = new Float32Array(256);
+        const samples = new Float32Array(analyser.fftSize);
         const measure = () => {
           analyser.getFloatTimeDomainData(samples);
           state.maxRMS = Math.max(state.maxRMS, Math.sqrt(samples.reduce((sum, n) => sum + n * n, 0) / samples.length));
           requestAnimationFrame(measure);
         };
-        requestAnimationFrame(measure);
+        setTimeout(() => requestAnimationFrame(measure), sampleDelay);
       }
       return result;
     } });
     Object.defineProperty(OscillatorNode.prototype, 'start', { configurable: true, value: function(this: OscillatorNode, ...args: unknown[]) {
       state.starts++; return Reflect.apply(start, this, args);
     } });
-  });
+  }, sampleDelay);
 }
 
 test('answers produce real audio after a gesture, and muting prevents all later sounds', async ({ page, isMobile }) => {
@@ -80,7 +81,8 @@ test('selection, moves, captures and undo all generate audio in free practice', 
 });
 
 test('the sound switch remains available in focus mode and survives refresh independently of speech', async ({ page, isMobile }) => {
-  await observeNativeAudio(page); await page.goto('/#/practice');
+  // A busy renderer can miss a whole 65 ms selection sound between frames.
+  await observeNativeAudio(page, 220); await page.goto('/#/practice');
   await press(page.getByRole('button', { name: '专心下棋', exact: true }), isMobile);
   await press(page.getByRole('button', { name: '关闭音效', exact: true }), isMobile);
   await press(page.locator('.app-view:not([hidden])').getByTestId('square-0-6'), isMobile); await press(page.locator('.app-view:not([hidden])').getByTestId('square-0-5'), isMobile);

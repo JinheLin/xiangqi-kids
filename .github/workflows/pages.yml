@@ -48,9 +48,13 @@ jobs:
           path: dist
 
   interaction:
-    name: Check desktop, phone and OPPO Pad3 touch interactions
+    name: Check desktop, phone and OPPO Pad3 (shard ${{ matrix.shard }}/3)
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3]
     env:
       BASE_PATH: /
     steps:
@@ -66,7 +70,7 @@ jobs:
       - name: Install test browser
         run: npx playwright install --with-deps chromium
       - name: Verify responsive layouts and real touch gestures
-        run: npm run test:e2e
+        run: npm run test:e2e -- --shard=${{ matrix.shard }}/3
 
   deploy:
     needs: [build, interaction]
