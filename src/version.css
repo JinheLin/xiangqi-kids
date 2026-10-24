@@ -1,0 +1,24 @@
+.brand-stack { position: relative; flex-shrink: 0; }
+.brand-stack .brand { align-items: flex-start; min-height: 48px; }
+.brand-stack .brand > span:last-child { padding-bottom: 19px; }
+.brand-stack .brand strong { line-height: 28px; }
+.app-version { position: absolute; left: 56px; bottom: 0; display: inline-flex; align-items: center; gap: 4px; min-height: 20px; padding: 0; border: 0; background: transparent; color: #7a8970; font-size: 10px; line-height: 1.4; white-space: nowrap; }
+.app-version > span { font-family: ui-monospace, monospace; font-size: 9px; }
+.app-version:hover { color: #385e42; }
+.version-dialog { width: min(380px, calc(100vw - 36px)); border: 1px solid #d8e2cb; border-radius: 20px; padding: 26px; color: #3c5b43; background: #fffef6; margin: auto; box-shadow: 0 16px 70px #21372830; }
+.version-dialog::backdrop { background: #21372870; }
+.version-dialog h2 { font-size: 22px; margin: 0 0 20px; }
+.version-dialog dl { margin: 0; display: grid; gap: 16px; }
+.version-dialog dl > div { display: grid; grid-template-columns: 78px 1fr; gap: 10px; font-size: 14px; line-height: 1.7; }
+.version-dialog dt { color: #89957b; }
+.version-dialog dd { margin: 0; overflow-wrap: anywhere; }
+.version-dialog dd small { display: block; color: #89957b; font-size: 11px; }
+.version-dialog > p { font-size: 12px; color: #829374; line-height: 1.9; margin: 22px 0; }
+.version-dialog > .btn { width: 100%; min-height: 48px; }
+@media (any-pointer: coarse), (max-width: 900px) {
+  .brand-stack .brand { gap: 9px; }
+  .brand-stack .brand strong { line-height: 25px; }
+  .brand-stack .brand-mark { margin-top: 6px; }
+  .app-version { left: 45px; min-height: 23px; }
+}
+@media (max-width: 650px) { .lesson-screen .brand-stack { display: none; } }
